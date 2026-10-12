@@ -2,7 +2,7 @@
 
 [English](CURRENT_STATUS.md) | [简体中文](CURRENT_STATUS.zh-CN.md)
 
-更新于 2026-10-12 · [Issue #17](https://github.com/Btkkgo/OrdiBot/issues/17) · G1–G5 本地交付；完整 V1 仍为 **NEEDS_VALIDATION**。
+更新于 2026-10-12 · [Issue #17](https://github.com/Btkkgo/OrdiBot/issues/17) · G1–G5 本地交付及 G6.1 外观验收；完整 V1 仍为 **NEEDS_VALIDATION**。
 
 ## Implemented / 已实现
 
@@ -26,11 +26,11 @@ Hidden、Edge、Chat、Agent 四态，左右停靠与垂直位置记忆，可关
 
 ## G6.1 外观与语言
 
-[Issue #20](https://github.com/Btkkgo/OrdiBot/issues/20)：活跃界面类型安全字典、14px 系统字体与五档字号、五种强调色/三种背景、即时外观预览/重置及兼容原生配置字段已 IMPLEMENTED。99 个 TypeScript / 37 个 Rust 测试、类型检查及前端构建 PASS。Mac 原生与新 Windows CI 验收待完成；无真实服务调用或新 Agent 功能，完整 V1 仍 NEEDS_VALIDATION.
+[Issue #20](https://github.com/Btkkgo/OrdiBot/issues/20)：活跃界面类型安全字典（每种语言 251 键）、14px 系统字体与五档字号、五种强调色/三种背景、即时外观预览/重置及兼容原生字段已实现并验证。**PASS：**99 个 TypeScript / 37 个 Rust 测试、类型检查、前端/签名原生构建、真实 Mac 中英切换、全部预设、130% Chat/Agent/Settings 排版、真实保存拒绝错误、重置、重启持久化及 Edge 回归。与私有恢复副本比较，原配置值/历史/停靠/窗口尺寸一致。独立[分支](https://github.com/Btkkgo/OrdiBot/actions/runs/38236081002)及 [PR Windows CI](https://github.com/Btkkgo/OrdiBot/actions/runs/38236236446)通过。运行时构建记录为 `f5cb3fe`，[PR #21](https://github.com/Btkkgo/OrdiBot/pull/21)，详见[验收与原生截图](ordibot/G6_1_ACCEPTANCE.zh-CN.md)。Windows 实际字体/上下文仍 NOT VERIFIED，真实服务 OWNER DEFERRED，无生产调用或新增 Agent 能力，完整 V1 仍 NEEDS_VALIDATION。
 
 ## Partial / 部分验证
 
-macOS 被动感知取得真实应用名；实测窗口标题未取得，降级为仅应用元数据。提醒节流/过滤/去重及元数据附件边界有回归/源码覆盖；菜单栏入口及全局快捷键恢复为 **NOT VERIFIED**。CUA 合成快捷键尝试未展开 Chat，尚无确定原生原因；点击 Edge 恢复可用。Windows 界面/上下文验收为 **NOT RUN**。G6.1 活跃界面本地化已实现，原生语言/外观验收进行中。
+macOS 被动感知取得真实应用名；实测窗口标题未取得，降级为仅应用元数据。提醒节流/过滤/去重及元数据附件边界有回归/源码覆盖；菜单栏入口及全局快捷键恢复为 **NOT VERIFIED**。CUA 合成快捷键尝试未展开 Chat，尚无确定原生原因；点击 Edge 恢复可用。Windows 界面/上下文验收为 **NOT RUN**。G6.1 活跃界面语言/外观在 Mac 原生验收通过。
 
 ## Blocked / 暂缓
 
