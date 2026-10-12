@@ -4,7 +4,6 @@ import {
   existsSync,
   mkdirSync,
   writeFileSync,
-  readdirSync,
 } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -20,7 +19,7 @@ const run = (cmd, argv, options = {}) => {
   return r.stdout;
 };
 const sha = (b) => createHash("sha256").update(b).digest("hex");
-function sourceHash() {
+function sourceSnapshot() {
   const files = run("git", [
     "ls-files",
     "--cached",
@@ -36,25 +35,37 @@ function sourceHash() {
         !p.startsWith(".agents/") &&
         !p.includes("src-tauri/examples/"),
     );
-  return sha(
-    files
-      .sort()
-      .map((p) =>
-        existsSync(path.join(root, p))
-          ? `${p}:${sha(readFileSync(path.join(root, p)))}`
-          : `${p}:missing`,
-      )
-      .join("\n"),
+  return Object.fromEntries(
+    files.sort().map((p) => {
+      if (!existsSync(path.join(root, p))) return [p, "missing"];
+      const bytes = readFileSync(path.join(root, p));
+      // Git checkout and Cargo can differ only in CRLF on Windows. Keep semantic edits guarded.
+      const content =
+        /\.(md|rs|json|toml|tsx?|css|mjs|py|sh|ya?ml)$/.test(p) ||
+        p === "Cargo.lock"
+          ? bytes.toString("utf8").replace(/\r\n/g, "\n")
+          : bytes;
+      return [p, sha(content)];
+    }),
   );
 }
-const before = sourceHash();
+const fingerprint = (snapshot) => sha(JSON.stringify(snapshot));
+const beforeSnapshot = sourceSnapshot();
+const before = fingerprint(beforeSnapshot);
 run(
   process.execPath,
   [path.join(root, "node_modules/@tauri-apps/cli/tauri.js"), "build", ...args],
   { cwd: path.join(root, "apps/desktop"), stdio: "inherit" },
 );
-if (sourceHash() !== before)
-  throw new Error("Source changed during build; bundle needs revalidation.");
+const afterSnapshot = sourceSnapshot();
+if (fingerprint(afterSnapshot) !== before) {
+  const changed = [
+    ...new Set([...Object.keys(beforeSnapshot), ...Object.keys(afterSnapshot)]),
+  ].filter((p) => beforeSnapshot[p] !== afterSnapshot[p]);
+  throw new Error(
+    `Source changed during build (${changed.join(", ")}); bundle needs revalidation.`,
+  );
+}
 const profile = args.includes("--debug") ? "debug" : "release";
 if (process.platform === "darwin") {
   const app = path.join(root, `target/${profile}/bundle/macos/OrdiBot.app`);

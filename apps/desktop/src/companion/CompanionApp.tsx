@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke, Channel, isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
   MessageCircle,
   ScanText,
@@ -23,6 +22,7 @@ import {
   Check,
   RefreshCw,
 } from "lucide-react";
+import { useSurfaceDrag } from "./useSurfaceDrag";
 import { Character } from "./Character";
 import { ModelSettings } from "./ModelSettings";
 import { AgentWorkspace } from "./AgentWorkspace";
@@ -37,6 +37,7 @@ import {
   type RemoteTask,
   type Attachment,
   type DesktopContext,
+  type PresenceSnapshot,
 } from "./types";
 const nav = [
   { id: "chat", label: "Chat", Icon: MessageCircle },
@@ -69,6 +70,8 @@ export function CompanionApp() {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [preview, setPreview] = useState("");
   const [context, setContext] = useState<DesktopContext>();
+  const [reminder, setReminder] = useState<DesktopContext | null>(null);
+  const drag = useSurfaceDrag(undefined, (e) => setError(displayError(e)));
   const [taskId, setTaskId] = useState<string>();
   const [newTask, setNewTask] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -134,6 +137,51 @@ export function CompanionApp() {
     };
   }, [refresh, navigate]);
   useEffect(() => {
+    if (!isTauri()) return;
+    let cancelled = false;
+    const stops: (() => void)[] = [];
+    const retain = (fn: () => void) => {
+      if (cancelled) fn();
+      else stops.push(fn);
+    };
+    void listen<PresenceSnapshot>("ordibot:presence", (e) => {
+      const p = e.payload;
+      setReminder(p.remindersEnabled ? p.reminder : null);
+      if (p.latest) setContext(p.latest);
+      setSnapshot((s) =>
+        s.data.config.edgeSide === p.side &&
+        s.data.config.edgeVertical === p.vertical
+          ? s
+          : {
+              ...s,
+              data: {
+                ...s.data,
+                config: {
+                  ...s.data.config,
+                  edgeSide: p.side,
+                  edgeVertical: p.vertical,
+                },
+              },
+            },
+      );
+    }).then(retain);
+    void listen<DesktopContext>("ordibot:context-accepted", (e) => {
+      setContext(e.payload);
+      setAttachments((a) => [
+        ...a.filter((v) => v.kind !== "app"),
+        {
+          kind: "app",
+          content: `Layer A: foreground metadata only; page/code/document content was NOT acquired.\n${e.payload.app}\n${e.payload.window}\nCaptured: ${e.payload.capturedAt}`,
+        },
+      ]);
+      setReminder(null);
+    }).then(retain);
+    return () => {
+      cancelled = true;
+      stops.forEach((fn) => fn());
+    };
+  }, []);
+  useEffect(() => {
     try {
       localStorage.setItem("ordibot.chatDraft", input);
     } catch {
@@ -179,13 +227,17 @@ export function CompanionApp() {
       clearInterval(timer);
     };
   }, [page, task?.id, task?.sessionId, task?.status]);
-  const attach = async (kind: "clipboard" | "screen" | "app") => {
+  const attach = async (
+    kind: "clipboard" | "screen" | "app",
+    region = false,
+  ) => {
     if (contextBusy || busy) return;
     setContextBusy(true);
     try {
       const value = await operation(async () => {
         if (kind === "clipboard") return invoke<string>("attach_clipboard");
-        if (kind === "screen") return invoke<string>("capture_screen");
+        if (kind === "screen")
+          return invoke<string>("capture_screen", { region });
         const c = await invoke<DesktopContext>("desktop_context");
         setContext(c);
         if (!c.available) throw "CONTEXT_UNAVAILABLE";
@@ -284,30 +336,18 @@ export function CompanionApp() {
     setError("");
     void navigate("chat");
   };
-  const drag = (e: React.MouseEvent) => {
-    if (
-      e.button === 0 &&
-      !(e.target as HTMLElement).closest("button,input,select,textarea") &&
-      isTauri()
-    ) {
-      e.preventDefault();
-      void getCurrentWindow()
-        .startDragging()
-        .catch((e) => setError(displayError(e)));
-    }
-  };
   return (
     <div
-      className={`companion-container ${page === "agent" ? "agent-mode" : ""}`}
+      className={`companion-container dock-${snapshot.data.config.edgeSide} ${page === "agent" ? "agent-mode" : ""}`}
     >
       {page !== "agent" ? (
-        <aside className="character-zone" onMouseDown={drag}>
+        <aside className="character-zone" {...drag}>
           <Character />
         </aside>
       ) : null}
       <div className="companion-window">
         {page === "agent" ? (
-          <div className="agent-titlebar" onMouseDown={drag}>
+          <div className="agent-titlebar" {...drag}>
             <span className="traffic-lights">
               <i />
               <i />
@@ -325,7 +365,7 @@ export function CompanionApp() {
                 title="收起窗口"
                 onClick={() =>
                   void operation(() =>
-                    invoke("window_action", { action: "hide" }),
+                    invoke("window_action", { action: "edge" }),
                   )
                 }
               >
@@ -371,7 +411,7 @@ export function CompanionApp() {
             className={`main-content ${page === "agent" ? "agent-content" : ""}`}
           >
             {page !== "agent" ? (
-              <header className="chat-header" onMouseDown={drag}>
+              <header className="chat-header" {...drag}>
                 <button
                   className="current-model"
                   onClick={() => void navigate("models")}
@@ -387,11 +427,11 @@ export function CompanionApp() {
                     <Pin size={12} className="pin-indicator" />
                   ) : null}
                   <button
-                    title="收起窗口 · ⌘⇧Space 恢复"
+                    title="收起到边缘小宠物 · ⌘⇧Space 展开"
                     aria-label="收起窗口"
                     onClick={() =>
                       void operation(() =>
-                        invoke("window_action", { action: "hide" }),
+                        invoke("window_action", { action: "edge" }),
                       )
                     }
                   >
@@ -399,6 +439,19 @@ export function CompanionApp() {
                   </button>
                 </div>
               </header>
+            ) : null}
+            {reminder && page !== "agent" ? (
+              <button
+                className="context-reminder-toast"
+                onClick={() => void operation(() => invoke("context_accept"))}
+              >
+                <Monitor size={14} />
+                <span>
+                  正在查看：{reminder.app}
+                  {reminder.window ? ` · ${reminder.window}` : ""}
+                </span>
+                <span className="muted">附加元数据</span>
+              </button>
             ) : null}
             {error ? (
               <div className="inline-error" role="alert">
@@ -519,7 +572,7 @@ export function CompanionApp() {
                 <div className="context-status">
                   <span className="tiny-dot" />
                   {context?.available
-                    ? `${context.app}${context.window ? " · " + context.window : ""}（主动获取）`
+                    ? `${context.app}${context.window ? " · " + context.window : ""}（仅应用/标题）`
                     : "未读取电脑内容"}
                   <button
                     title="主动读取当前 App / Window"
@@ -553,7 +606,16 @@ export function CompanionApp() {
                         <ImagePlus size={16} />
                         <span>
                           Ask about Screen
-                          <small>选择截图区域，预览后确认</small>
+                          <small>截取屏幕，预览后确认</small>
+                        </span>
+                      </button>
+                      <button
+                        disabled={contextBusy || busy}
+                        onClick={() => void attach("screen", true)}
+                      >
+                        <ImagePlus size={16} />
+                        <span>
+                          区域截图<small>macOS 拖选区域 · Esc 取消</small>
                         </span>
                       </button>
                       <button

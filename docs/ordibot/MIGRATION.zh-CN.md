@@ -12,6 +12,6 @@
 
 拉取后的基线中，`main` 独有 5 个提交，`codex/realtime-workbench` 独有 15 个提交。实体机器人工程使用独立 `OddBot` 远端，不属于本次迁移。
 
-新 bundle identifier 为 `ai.ordibot.desktop`。本地 `ordibot-v1.json` 和凭据服务与 `ai.ordinconn.desktop` 分离。明确保留旧数据，不静默迁移或覆盖。首版不会自动导入金融记录和旧 Provider 密钥，需在本地配置新服务。剪贴板仅点击后读取，截图先预览确认；截图像素仅保留在内存，不写入历史文件。不启动被动监控或本地自主操作引擎。
+新 bundle identifier 为 `ai.ordibot.desktop`。本地 `ordibot-v1.json` 和凭据服务与 `ai.ordinconn.desktop` 分离。明确保留旧数据，不静默迁移或覆盖。首版不会自动导入金融记录和旧 Provider 密钥，需在本地配置新服务。剪贴板仅点击后读取，截图先预览确认；截图像素仅保留在内存，不写入历史文件。仅运行可关闭的应用/窗口元数据感知，不启动深层内容监控或本地自主操作引擎。
 
 新构建包装器验证本地 ad-hoc OrdiBot bundle，并记录源码和可执行文件指纹。历史 OrdinConn 冻结 bundle 及凭据保留，新包装器不删除它们。应启动新的 OrdiBot bundle，而不是历史 OrdinConn 应用。后续构建使用同一最新 OrdiBot 输出位置。

@@ -15,6 +15,10 @@ pub struct Config {
     pub style: String,
     pub always_on_top: bool,
     pub remote_model: String,
+    pub context_reminders: bool,
+    pub browsers_editors_only: bool,
+    pub edge_side: String,
+    pub edge_vertical: f64,
 }
 impl Default for Config {
     fn default() -> Self {
@@ -27,6 +31,10 @@ impl Default for Config {
             style: "concise".into(),
             always_on_top: true,
             remote_model: "gpt-6-astra".into(),
+            context_reminders: true,
+            browsers_editors_only: false,
+            edge_side: "left".into(),
+            edge_vertical: 0.5,
         }
     }
 }
@@ -46,6 +54,9 @@ impl Config {
         if self.model.len() > 200
             || !(256..=8192).contains(&self.output_length)
             || !matches!(self.style.as_str(), "concise" | "normal" | "detailed")
+            || !matches!(self.edge_side.as_str(), "left" | "right")
+            || !self.edge_vertical.is_finite()
+            || !(0.0..=1.0).contains(&self.edge_vertical)
         {
             return Err("INVALID_MODEL_SETTINGS".into());
         }

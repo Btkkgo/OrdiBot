@@ -1,9 +1,10 @@
 mod companion_commands;
 mod companion_platform;
+mod companion_presence;
 mod companion_remote;
 mod companion_store;
 use companion_store::CompanionState;
-use tauri::{Emitter, Manager};
+use tauri::Manager;
 
 pub fn run() {
     tauri::Builder::default()
@@ -23,6 +24,7 @@ pub fn run() {
                 CompanionState::load(dir.join("ordibot-v1.json")).map_err(std::io::Error::other)?;
             let data = state.stored.lock().unwrap().clone();
             app.manage(state);
+            app.manage(companion_presence::PresenceState::default());
             if let Some(w) = app.get_webview_window("main") {
                 let _ = w.set_always_on_top(data.config.always_on_top);
                 if let Some(g) = data.chat_geometry {
@@ -36,10 +38,10 @@ pub fn run() {
                 w.on_window_event(move |event| {
                     if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                         api.prevent_close();
-                        companion_commands::remember_geometry(&handle);
-                        if let Some(w) = handle.get_webview_window("main") {
-                            let _ = w.hide();
-                        }
+                        let _ = companion_presence::set_surface(
+                            &handle,
+                            companion_presence::Surface::Edge,
+                        );
                     }
                 });
             }
@@ -54,15 +56,27 @@ pub fn run() {
             )?;
             let quit =
                 tauri::menu::MenuItem::with_id(app, "quit", "Quit OrdiBot", true, None::<&str>)?;
-            let menu = tauri::menu::Menu::with_items(app, &[&show, &agent, &quit])?;
+            let edge = tauri::menu::MenuItem::with_id(app, "edge", "Edge Pet", true, None::<&str>)?;
+            let hidden =
+                tauri::menu::MenuItem::with_id(app, "hidden", "Hide OrdiBot", true, None::<&str>)?;
+            let menu = tauri::menu::Menu::with_items(app, &[&show, &edge, &agent, &hidden, &quit])?;
             let mut tray = tauri::tray::TrayIconBuilder::new()
                 .tooltip("OrdiBot · Your Desktop AI Companion")
                 .menu(&menu)
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "show" => companion_commands::show_main(app),
+                    "edge" => {
+                        let _ =
+                            companion_presence::set_surface(app, companion_presence::Surface::Edge);
+                    }
+                    "hidden" => {
+                        let _ = companion_presence::set_surface(
+                            app,
+                            companion_presence::Surface::Hidden,
+                        );
+                    }
                     "agent" => {
-                        companion_commands::show_main(app);
-                        let _ = app.emit("ordibot:navigate", "agent");
+                        let _ = companion_presence::presence_action(app.clone(), "agent".into());
                     }
                     "quit" => {
                         companion_commands::remember_geometry(app);
@@ -83,9 +97,16 @@ pub fn run() {
                 .shortcut_available
                 .lock()
                 .unwrap() = available;
+            companion_presence::set_surface(app.handle(), companion_presence::Surface::Edge)
+                .map_err(std::io::Error::other)?;
+            companion_presence::start_awareness(app.handle().clone());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            companion_presence::presence_snapshot,
+            companion_presence::presence_action,
+            companion_presence::context_accept,
+            companion_presence::surface_drag,
             companion_commands::companion_snapshot,
             companion_commands::save_companion_config,
             companion_commands::chat_send,

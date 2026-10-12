@@ -6,18 +6,18 @@
 
 ## Implemented
 
-深色紧凑 Chat、原创小角色、窄导航、同进程展开 Agent 工作台、模型/偏好表单、主动剪贴板/应用/截图附件、本地历史、流式 Model Gateway 与托管 OpenAI Agent 适配器。金融采集器、交易与 Android 运行时退出默认活跃应用，旧资产/数据分别保留。
+四态（Hidden、Edge、Chat、Agent）、左右停靠与垂直位置记忆、可关闭/节流/去重/过滤的元数据轻提醒、深色紧凑 Chat、原创小角色、窄导航、同进程展开 Agent 工作台、模型/偏好表单、主动剪贴板/应用/截图附件、本地历史、流式 Model Gateway 与托管 OpenAI Agent 适配器。金融采集器、交易与 Android 运行时退出默认活跃应用，旧资产/数据分别保留。
 
 ## Verified
 
 - **PASS：**验证全部 refs 恢复 bundle、原未跟踪资产归档、SQLite 备份/完整性/逻辑一致；原未跟踪文件哈希未变。
-- **PASS：**89 个 TypeScript 测试、30 个 Rust 测试（活跃默认成员）、TypeScript 类型检查、前端构建、公开安全检查与差异空白检查。
+- **PASS：**89 个 TypeScript 测试、33 个 Rust 测试（活跃默认成员）、TypeScript 类型检查、前端构建、公开安全检查与差异空白检查。
 - **PASS：**真实 macOS release 应用启动、紧凑/展开切换与 Chat 尺寸恢复、主动剪贴板附件/移除、前台 Chrome 元数据、未配置模型错误且无假回复。已验证两次本地 ad-hoc 构建，最终原生交互检查进行中。
 - 实施期间生产 Chat/远程请求：**0**。
 
 ## Partial
 
-原生拖动、截图预览确认、菜单栏/快捷键恢复、偏好持久化与最终可执行文件记录仍需最终交互检查。Windows 原生 CI 已准备，尚未运行。Windows 界面/上下文验收为 **NOT RUN**。英文界面本地化待办。
+原生拖动、截图预览确认、菜单栏/快捷键恢复、偏好持久化与最终可执行文件记录仍需最终交互检查。首轮独立 Windows 执行通过 89 个 TypeScript 和 30 个 Rust 测试，并生成原生可执行文件/NSIS 安装包，但最终源码变化检查失败，待诊断重试。Windows 界面/上下文验收为 **NOT RUN**。英文界面本地化待办。
 
 ## Blocked
 

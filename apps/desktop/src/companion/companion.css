@@ -1171,3 +1171,117 @@ h3 {
 .character-zone svg {
   pointer-events: none;
 }
+
+.companion-container.dock-right:not(.agent-mode) .character-zone {
+  order: 2;
+}
+.character-zone,
+.chat-header,
+.agent-titlebar,
+.edge-pet {
+  touch-action: none;
+}
+.edge-surface {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 64px;
+  gap: 8px;
+  overflow: hidden;
+}
+.edge-pet {
+  width: 56px;
+  height: 64px;
+  flex: none;
+  position: relative;
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.edge-pet .orbit-character {
+  width: 58px;
+  height: 69px;
+  pointer-events: none;
+  transform: translate(-9px, 9px);
+}
+.edge-ready-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #b99aea;
+  position: absolute;
+  right: 5px;
+  top: 23px;
+  box-shadow: 0 0 0 3px #1b1b1d55;
+  pointer-events: none;
+}
+.edge-surface.dock-right {
+  flex-direction: row-reverse;
+}
+.edge-surface.dock-right .orbit-character {
+  transform: translate(9px, 9px) scaleX(-1);
+}
+.edge-surface.dock-right .edge-ready-dot {
+  right: auto;
+  left: 5px;
+}
+.edge-reminder {
+  width: 266px;
+  min-width: 0;
+  height: 58px;
+  position: relative;
+  border: 1px solid #66537b;
+  border-radius: 12px;
+  background: #222026;
+  box-shadow: 0 3px 12px #0004;
+}
+.reminder-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 24px 8px 12px;
+}
+.reminder-content strong,
+.reminder-content span {
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.reminder-content strong {
+  color: #e5d8fa;
+  font-size: 11px;
+  font-weight: 500;
+}
+.reminder-content span {
+  color: #b0aab7;
+  font-size: 10px;
+}
+.reminder-close {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  width: 18px;
+  height: 18px;
+  color: #aaa;
+}
+.context-reminder-toast {
+  border: 1px solid #50425e;
+  background: #2c2633;
+  padding: 9px 14px;
+  margin: 0 14px 8px;
+  font-size: 10px;
+  gap: 8px;
+  border-radius: 9px;
+}
+.context-reminder-toast > span:first-of-type {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

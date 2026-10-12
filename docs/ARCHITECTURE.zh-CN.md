@@ -22,3 +22,7 @@ React CompanionApp / AgentWorkspace
 macOS 使用原生剪贴板、主动 System Events 元数据与交互式截图。权限缺失明确提示，不静默授权。Windows 隔离前台元数据/截图调用和原生密钥存储。Windows CI 只能证明编译，桌面交互需 Windows 11 验收。
 
 配置保存 endpoint/model/vision/output/style/pin，不含密钥。界面仅收到密钥存在的布尔状态，模型错误归一化且不暴露秘密。附件文字不得覆盖用户问题或系统规则。参见[Provider 证据](ordibot/PROVIDERS.zh-CN.md)、[迁移](ordibot/MIGRATION.zh-CN.md)与[状态](CURRENT_STATUS.zh-CN.md)。
+
+补充边缘交互使用同一 Tauri 进程、存储和 Provider 运行时中的两个协同 webview：可扩展主窗口与不抢焦点的小型边缘窗口。展开后角色属于 Chat。边缘窗口记忆停靠侧与跨屏垂直比例，指针捕获拖动在释放后吸附。托盘分别提供 Edge 与 Hidden。
+
+元数据循环仅在提醒开启且非 Hidden 时每三秒运行。应用/标题在主动附加前仅存在内存。提醒去重、20 秒节流、10 秒消失，不强制展开 Chat，不调用剪贴板、截图或服务。提供仅浏览器/编辑器过滤。点击只带入真实应用/标题，不取得页面、代码或文档正文。

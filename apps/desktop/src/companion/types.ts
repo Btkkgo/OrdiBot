@@ -9,6 +9,10 @@ export interface Config {
   style: "concise" | "normal" | "detailed";
   alwaysOnTop: boolean;
   remoteModel: string;
+  contextReminders: boolean;
+  browsersEditorsOnly: boolean;
+  edgeSide: "left" | "right";
+  edgeVertical: number;
 }
 export interface Message {
   role: "user" | "assistant";
@@ -57,6 +61,10 @@ export const defaultConfig: Config = {
   style: "concise",
   alwaysOnTop: true,
   remoteModel: "gpt-6-astra",
+  contextReminders: true,
+  browsersEditorsOnly: false,
+  edgeSide: "left",
+  edgeVertical: 0.5,
 };
 export function displayError(error: unknown): string {
   const code = typeof error === "string" ? error : "LOCAL_OPERATION_FAILED";
@@ -103,3 +111,12 @@ export const terminalTask = (s: string) =>
     "released",
     "submission_unknown",
   ].includes(s);
+
+export interface PresenceSnapshot {
+  surface: "hidden" | "edge" | "chat" | "agent";
+  side: "left" | "right";
+  vertical: number;
+  reminder: DesktopContext | null;
+  latest: DesktopContext | null;
+  remindersEnabled: boolean;
+}

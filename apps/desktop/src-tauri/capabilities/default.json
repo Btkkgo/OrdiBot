@@ -1,9 +1,10 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "OrdiBot main window",
+  "description": "OrdiBot coordinated Chat and Edge surfaces",
   "windows": [
-    "main"
+    "main",
+    "edge"
   ],
   "permissions": [
     "core:default",

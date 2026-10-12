@@ -109,6 +109,12 @@ export function ModelSettings({
           独立云端浏览器服务，需要 Agents
           权限及额度。不会使用你的本地电脑执行任务。
         </p>
+        <p className="muted">
+          连接状态：
+          {snapshot.remoteKeyPresent
+            ? "密钥已配置 · 真实连接待验收"
+            : "尚未配置"}
+        </p>
         <label>
           Agent Model ID
           <input
@@ -151,6 +157,48 @@ export function ModelSettings({
           />
           <Pin size={14} /> 窗口置顶
         </label>
+        <label className="check-label">
+          <input
+            type="checkbox"
+            checked={config.contextReminders}
+            onChange={(e) => field("contextReminders", e.target.checked)}
+          />
+          上下文轻提醒（仅应用名与窗口标题）
+        </label>
+        <label className="check-label">
+          <input
+            type="checkbox"
+            checked={config.browsersEditorsOnly}
+            onChange={(e) => field("browsersEditorsOnly", e.target.checked)}
+          />
+          仅提醒浏览器与编辑器
+        </label>
+        <label>
+          边缘宠物位置
+          <select
+            value={config.edgeSide}
+            onChange={(e) => field("edgeSide", e.target.value)}
+          >
+            <option value="left">桌面左侧</option>
+            <option value="right">桌面右侧</option>
+          </select>
+        </label>
+        <label>
+          垂直位置 · {Math.round(config.edgeVertical * 100)}%
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={Math.round(config.edgeVertical * 100)}
+            onChange={(e) =>
+              field("edgeVertical", Number(e.target.value) / 100)
+            }
+          />
+        </label>
+        <p className="muted">
+          提醒最多每 20
+          秒一次。点击仅附加应用/标题，不自动读取正文、剪贴板或截图。
+        </p>
         <p className="muted">
           {snapshot.shortcutAvailable
             ? "⌘ / Ctrl + Shift + Space 重新打开窗口。"
@@ -174,7 +222,7 @@ export function ModelSettings({
         )}
       </button>
       <p className="privacy-note">
-        只在你主动附加时读取内容。截图确认后才会发送；截图像素不保存到历史文件。
+        轻提醒只检测应用与标题。正文、剪贴板和截图需主动附加；截图像素不保存到历史文件。
       </p>
     </div>
   );

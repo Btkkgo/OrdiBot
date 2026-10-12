@@ -4,10 +4,10 @@
 
 **Your Desktop AI Companion** — a compact desktop context assistant and an expandable workspace for hosted computer Agents. This is the original OrdinConn repository, renamed without replacing its Git history.
 
-OrdiBot uses Tauri v2, Rust, React and TypeScript. The dark floating Chat window has a narrow navigation rail, a small original 2D character, and one runtime shared with the larger Agent workspace. Financial dashboards, collectors, trading and Android automation are retired from the active desktop application; their historical assets remain recoverable.
+OrdiBot uses Tauri v2, Rust, React and TypeScript. The app starts as a small edge-docked character. Click it to expand Chat; collapse Chat to return to the remembered left/right edge. Hidden remains a separate tray action. The dark floating Chat window has a narrow navigation rail, a small original 2D character, and one runtime shared with the larger Agent workspace. Financial dashboards, collectors, trading and Android automation are retired from the active desktop application; their historical assets remain recoverable.
 
 - **Chat:** owner-configured OpenAI-compatible endpoint through Model Gateway; multi-turn text, streaming, cancellation, bounded responses and explicit errors. No credential-free demo answers.
-- **Context:** attach copied text on demand, actively acquire foreground app/window metadata, or capture and confirm a screenshot. No background screen, keyboard or clipboard monitoring. Vision must be enabled for screenshot requests.
+- **Context:** optional lightweight app/window-title reminders (20-second throttle, deduplication and browser/editor filter). Clicking a reminder attaches only that metadata. Attach copied text on demand, actively acquire metadata, or capture and confirm a screenshot. No background screen, keyboard or clipboard monitoring. Vision must be enabled for screenshot requests.
 - **Agent:** an OpenAI hosted Agents API adapter with provider-driven task history, records, results, origin approvals and cancellation. Meta Muse and Grok Bot are clearly marked external entries, with no verified native task API integration.
 - **Local controls:** floating window, pin preference, mode/geometry restore, tray/menu entry and Command/Ctrl + Shift + Space when registration succeeds.
 

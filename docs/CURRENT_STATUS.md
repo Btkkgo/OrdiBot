@@ -6,18 +6,18 @@ Updated 2026-10-12 Â· [Issue #17](https://github.com/Btkkgo/OrdiBot/issues/17) Â
 
 ## Implemented
 
-Compact dark Chat with an original small character, narrow navigation, expanded Agent workspace in the same process, model/preferences form, deliberate clipboard/app/screenshot attachments, local history, streaming Model Gateway and hosted OpenAI Agent adapter. Financial collectors, trading and Android runtime are excluded from the active default application. Legacy assets/data are retained separately.
+Four surfaces (Hidden, Edge, Chat, Agent), left/right docking and remembered vertical position, metadata-only optional reminders with throttle/dedup/filter, and compact dark Chat with an original small character, narrow navigation, expanded Agent workspace in the same process, model/preferences form, deliberate clipboard/app/screenshot attachments, local history, streaming Model Gateway and hosted OpenAI Agent adapter. Financial collectors, trading and Android runtime are excluded from the active default application. Legacy assets/data are retained separately.
 
 ## Verified
 
 - **PASS:** verified all-ref recovery bundle, archived original untracked work, SQLite backup/integrity and logical equality; original untracked file hashes preserved.
-- **PASS:** 89 TypeScript tests, 30 Rust tests (active default members), TypeScript typecheck, frontend build, public security gate and diff whitespace checks.
+- **PASS:** 89 TypeScript tests, 33 Rust tests (active default members), TypeScript typecheck, frontend build, public security gate and diff whitespace checks.
 - **PASS:** actual macOS release app launch, compact/expanded mode switch and restored Chat dimensions, explicit clipboard attachment/removal, foreground Chrome metadata, unconfigured-model error without fake reply. Two local ad-hoc bundles were verified; final native interaction checks are in progress.
 - Production Chat/remote requests during implementation: **0**.
 
 ## Partial
 
-Native drag, screenshot preview/confirmation, tray/hotkey restore, preference persistence and final executable receipt need final interaction checks. Windows native CI is prepared but not yet run. Windows GUI/context acceptance is **NOT RUN**. English UI localization is deferred.
+Native drag, screenshot preview/confirmation, tray/hotkey restore, preference persistence and final executable receipt need final interaction checks. First independent Windows run passed 89 TypeScript and 30 Rust tests and produced the native executable/NSIS installer, but failed the final source-change guard. Diagnosis/retry is pending. Windows GUI/context acceptance is **NOT RUN**. English UI localization is deferred.
 
 ## Blocked
 

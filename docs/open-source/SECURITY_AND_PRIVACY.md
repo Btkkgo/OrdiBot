@@ -24,7 +24,7 @@ The scanner reports the file and detector category, not the suspected value. Red
 
 ## Product safety boundaries
 
-OrdiBot reads copied text, foreground metadata and screenshots only after explicit actions. Screenshots require confirmation and pixels are excluded from persisted history. User-configured keys use system credential storage; attached text is untrusted context. No local autonomous computer engine or financial execution starts. Hosted tasks are public/read-only; unsupported sign-in/tool approvals remain blocked.
+OrdiBot passively detects only app/window metadata when reminders are enabled. Copied text and screenshots require explicit actions; clicking a reminder attaches only metadata. Screenshots require confirmation and pixels are excluded from persisted history. User-configured keys use system credential storage; attached text is untrusted context. No local autonomous computer engine or financial execution starts. Hosted tasks are public/read-only; unsupported sign-in/tool approvals remain blocked.
 
 ## Incident response
 

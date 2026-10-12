@@ -27,7 +27,7 @@ end tell"#,
         ])
         .output();
     #[cfg(target_os="windows")]
-    let output=Command::new("powershell.exe").args(["-NoProfile","-NonInteractive","-Command",r#"Add-Type 'using System;using System.Runtime.InteropServices;using System.Text;public class W{[DllImport("user32.dll")]public static extern IntPtr GetForegroundWindow();[DllImport("user32.dll",CharSet=CharSet.Unicode)]public static extern int GetWindowText(IntPtr h,StringBuilder s,int n);[DllImport("user32.dll")]public static extern uint GetWindowThreadProcessId(IntPtr h,out uint p);}';$h=[W]::GetForegroundWindow();$s=New-Object System.Text.StringBuilder 1024;[void][W]::GetWindowText($h,$s,1024);$p=[uint32]0;[void][W]::GetWindowThreadProcessId($h,[ref]$p);(Get-Process -Id $p).ProcessName;$s.ToString()"#]).output();
+    let output=Command::new("powershell.exe").args(["-NoProfile","-NonInteractive","-Command",r#"Add-Type 'using System;using System.Runtime.InteropServices;using System.Text;public class W{[DllImport("user32.dll")]public static extern IntPtr GetForegroundWindow();[DllImport("user32.dll",CharSet=CharSet.Unicode)]public static extern int GetWindowText(IntPtr h,StringBuilder s,int n);[DllImport("user32.dll")]public static extern uint GetWindowThreadProcessId(IntPtr h,out uint p);}';$OutputEncoding=[Console]::OutputEncoding=[Text.UTF8Encoding]::new();$h=[W]::GetForegroundWindow();$s=New-Object System.Text.StringBuilder 1024;[void][W]::GetWindowText($h,$s,1024);$p=[uint32]0;[void][W]::GetWindowThreadProcessId($h,[ref]$p);(Get-Process -Id $p).ProcessName;$s.ToString()"#]).output();
     #[cfg(not(any(target_os = "macos", target_os = "windows")))]
     let output: std::io::Result<std::process::Output> = Err(std::io::Error::other("unsupported"));
     let text = output
@@ -36,8 +36,20 @@ end tell"#,
         .and_then(|o| String::from_utf8(o.stdout).ok())
         .unwrap_or_default();
     let mut lines = text.lines();
-    let app = lines.next().unwrap_or_default().trim().to_owned();
-    let window = lines.next().unwrap_or_default().trim().to_owned();
+    let app = lines
+        .next()
+        .unwrap_or_default()
+        .trim()
+        .chars()
+        .take(200)
+        .collect::<String>();
+    let window = lines
+        .next()
+        .unwrap_or_default()
+        .trim()
+        .chars()
+        .take(1024)
+        .collect::<String>();
     DesktopContext {
         available: !app.is_empty(),
         app,
@@ -80,13 +92,27 @@ pub async fn attach_clipboard() -> Result<String, String> {
     .map_err(|_| "CLIPBOARD_UNAVAILABLE")?
 }
 #[tauri::command]
-pub async fn capture_screen(app: tauri::AppHandle) -> Result<String, String> {
+pub async fn capture_screen(app: tauri::AppHandle, region: Option<bool>) -> Result<String, String> {
     let window = app.get_webview_window("main").ok_or("WINDOW_UNAVAILABLE")?;
     let _ = window.hide();
-    let result=tauri::async_runtime::spawn_blocking(||{
+    if let Some(edge) = app.get_webview_window("edge") {
+        let _ = edge.hide();
+    }
+    let result=tauri::async_runtime::spawn_blocking(move ||{
         let dir=tempfile::tempdir().map_err(|_|"SCREENSHOT_FAILED")?;let path=dir.path().join("context.png");
         #[cfg(target_os="macos")]
-        let status=Command::new("/usr/sbin/screencapture").args(["-i","-x","-t","png"]).arg(&path).status();
+        let status={
+            let mut command=Command::new("/usr/sbin/screencapture");
+            if region.unwrap_or(false) { command.arg("-i"); }
+            command.args(["-x","-t","png"]).arg(&path);
+            let mut child=command.spawn().map_err(|_|"SCREENSHOT_PERMISSION_OR_CAPTURE_FAILED")?;
+            let start=std::time::Instant::now();
+            loop {
+                if let Some(status)=child.try_wait().map_err(|_|"SCREENSHOT_FAILED")? {break Ok::<_,std::io::Error>(status);}
+                if start.elapsed()>std::time::Duration::from_secs(120) {let _=child.kill();let _=child.wait();return Err("SCREENSHOT_CANCELLED_OR_PERMISSION_REQUIRED".into());}
+                std::thread::sleep(std::time::Duration::from_millis(100));
+            }
+        };
         #[cfg(target_os="windows")]
         let status=Command::new("powershell.exe").args(["-NoProfile","-NonInteractive","-Command",r#"Add-Type -AssemblyName System.Windows.Forms;Add-Type -AssemblyName System.Drawing;$b=[System.Windows.Forms.SystemInformation]::VirtualScreen;$i=New-Object System.Drawing.Bitmap $b.Width,$b.Height;$g=[System.Drawing.Graphics]::FromImage($i);$g.CopyFromScreen($b.Left,$b.Top,0,0,$i.Size);$i.Save($env:ORDIBOT_SCREENSHOT_PATH,[System.Drawing.Imaging.ImageFormat]::Png);$g.Dispose();$i.Dispose()"#]).env("ORDIBOT_SCREENSHOT_PATH",&path).status();
         #[cfg(not(any(target_os="macos",target_os="windows")))]

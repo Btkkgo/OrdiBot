@@ -58,6 +58,8 @@ pub fn save_companion_config(
         w.set_always_on_top(stored.config.always_on_top)
             .map_err(|_| "WINDOW_UNAVAILABLE")?
     }
+    drop(stored);
+    super::companion_presence::refresh_preferences(&app);
     Ok(())
 }
 #[derive(Deserialize)]
@@ -313,6 +315,12 @@ pub fn chat_cancel(state: State<'_, CompanionState>) -> Result<(), String> {
 
 pub fn remember_geometry(app: &tauri::AppHandle) {
     let state = app.state::<CompanionState>();
+    if app
+        .try_state::<super::companion_presence::PresenceState>()
+        .is_some_and(|s| *s.surface.lock().unwrap() != super::companion_presence::Surface::Chat)
+    {
+        return;
+    }
     if *state.agent_mode.lock().unwrap() {
         return;
     }
@@ -331,58 +339,19 @@ pub fn remember_geometry(app: &tauri::AppHandle) {
     }
 }
 pub fn show_main(app: &tauri::AppHandle) {
-    #[cfg(target_os = "macos")]
-    let _ = app.show();
-    if let Some(w) = app.get_webview_window("main") {
-        let _ = w.show();
-        let _ = w.set_focus();
-    }
+    let _ = super::companion_presence::presence_action(app.clone(), "chat".into());
 }
 #[tauri::command]
-pub fn window_action(
-    app: tauri::AppHandle,
-    state: State<'_, CompanionState>,
-    action: String,
-) -> Result<(), String> {
-    let w = app.get_webview_window("main").ok_or("WINDOW_UNAVAILABLE")?;
-    match action.as_str() {
-        "hide" => {
-            remember_geometry(&app);
-            w.hide().map_err(|_| "WINDOW_UNAVAILABLE")?;
-        }
-        "chat" => {
-            let was_agent = *state.agent_mode.lock().map_err(|_| "STATE_UNAVAILABLE")?;
-            if was_agent {
-                let g = state
-                    .stored
-                    .lock()
-                    .map_err(|_| "STATE_UNAVAILABLE")?
-                    .chat_geometry
-                    .clone();
-                w.set_size(tauri::LogicalSize::new(
-                    g.as_ref().map(|g| g.width).unwrap_or(520).clamp(460, 900),
-                    g.as_ref().map(|g| g.height).unwrap_or(740).clamp(580, 1100),
-                ))
-                .map_err(|_| "WINDOW_UNAVAILABLE")?;
-                if let Some(g) = g {
-                    let _ = w.set_position(tauri::PhysicalPosition::new(g.x, g.y));
-                }
-            }
-            *state.agent_mode.lock().map_err(|_| "STATE_UNAVAILABLE")? = false;
-        }
-        "agent" => {
-            if !*state.agent_mode.lock().map_err(|_| "STATE_UNAVAILABLE")? {
-                remember_geometry(&app);
-                w.set_size(tauri::LogicalSize::new(1180, 820))
-                    .map_err(|_| "WINDOW_UNAVAILABLE")?;
-                let _ = w.center();
-                *state.agent_mode.lock().map_err(|_| "STATE_UNAVAILABLE")? = true;
-            }
-        }
-        "show" => show_main(&app),
+pub fn window_action(app: tauri::AppHandle, action: String) -> Result<(), String> {
+    use super::companion_presence::{Surface, set_surface};
+    let next = match action.as_str() {
+        "chat" | "show" => Surface::Chat,
+        "agent" => Surface::Agent,
+        "edge" => Surface::Edge,
+        "hide" | "hidden" => Surface::Hidden,
         _ => return Err("INVALID_WINDOW_ACTION".into()),
-    }
-    Ok(())
+    };
+    set_surface(&app, next)
 }
 #[tauri::command]
 pub fn open_service(service: String) -> Result<(), String> {
