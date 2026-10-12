@@ -1,7 +1,7 @@
 name: OrdiBot Windows build
 on:
   push:
-    branches: [codex/ordibot-v1, main]
+    branches: ["codex/**", main]
     paths:
       - 'apps/**'
       - 'packages/**'

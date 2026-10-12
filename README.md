@@ -11,7 +11,7 @@ OrdiBot uses Tauri v2, Rust, React and TypeScript. The app starts as a small edg
 - **Agent:** an OpenAI hosted Agents API adapter with provider-driven task history, records, results, origin approvals and cancellation. Meta Muse and Grok Bot are clearly marked external entries, with no verified native task API integration.
 - **Local controls:** floating window, pin preference, mode/geometry restore, tray/menu entry and Command/Ctrl + Shift + Space when registration succeeds.
 
-The current interface is Simplified Chinese. English UI localization is deferred. The owner has deferred production API acceptance until credentials are configured locally. Adapter implementation and local tests do **not** establish live service availability. macOS is the first local delivery target; Windows requires independent native build and interactive acceptance. See [current status](docs/CURRENT_STATUS.md).
+G6.1 implements immediate Simplified Chinese / English UI switching, five font scales and selectable dark appearance. Native acceptance is tracked separately in the current status. The owner has deferred production API acceptance until credentials are configured locally. Adapter implementation and local tests do **not** establish live service availability. macOS is the first local delivery target; Windows requires independent native build and interactive acceptance. See [current status](docs/CURRENT_STATUS.md).
 
 ## Run locally
 

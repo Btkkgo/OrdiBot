@@ -1,6 +1,21 @@
+import {
+  companionEn,
+  createCompanionTranslator,
+  type TranslationKey,
+} from "../i18n/companion";
 export type Page =
-  "chat" | "context" | "agent" | "history" | "models" | "settings";
-export interface Config {
+  | "chat"
+  | "context"
+  | "agent"
+  | "history"
+  | "models"
+  | "settings";
+import {
+  appearanceDefaults,
+  type Appearance,
+  type Language,
+} from "./appearance";
+export interface Config extends Appearance {
   provider: string;
   baseUrl: string;
   model: string;
@@ -53,6 +68,7 @@ export interface DesktopContext {
   available: boolean;
 }
 export const defaultConfig: Config = {
+  ...appearanceDefaults,
   provider: "OpenAI-compatible",
   baseUrl: "https://api.openai.com/v1",
   model: "",
@@ -66,36 +82,19 @@ export const defaultConfig: Config = {
   edgeSide: "left",
   edgeVertical: 0.5,
 };
-export function displayError(error: unknown): string {
+export function displayError(
+  error: unknown,
+  language: Language = "zh-CN",
+): string {
   const code = typeof error === "string" ? error : "LOCAL_OPERATION_FAILED";
-  const errors: Record<string, string> = {
-    MODEL_KEY_NOT_CONFIGURED: "请先在 Models 中配置本地 API Key。",
-    INVALID_MODEL_SETTINGS: "请填写 Model ID，并检查输出长度。",
-    INVALID_BASE_URL: "Base URL 需要 HTTPS，或本机 HTTP 地址；不能包含密钥。",
-    VISION_NOT_ENABLED: "当前模型未启用视觉能力，请移除截图或切换视觉模型。",
-    CLIPBOARD_EMPTY_OR_UNAVAILABLE:
-      "剪贴板中没有可读取的文字，请先复制所选内容。",
-    SCREENSHOT_CANCELLED_OR_PERMISSION_REQUIRED:
-      "截图已取消，或需要在系统设置中允许屏幕录制。",
-    SECURE_STORAGE_UNAVAILABLE: "系统安全凭据存储不可用，请检查本地权限。",
-    REMOTE_KEY_NOT_CONFIGURED: "请先在 Models 中配置 OpenAI Agents API Key。",
-    GENERATION_CANCELLED: "已取消生成。",
-    NETWORK_ERROR: "网络连接失败，可以重试。",
-    TIMEOUT: "模型请求超时，可以重试。",
-    AUTHENTICATION: "API 认证失败，请检查本地配置。",
-    RATE_LIMITED: "服务限流，请稍后重试。",
-    GENERATION_ALREADY_RUNNING: "已有回复正在生成。",
-    SCREENSHOT_TOO_LARGE_USE_SMALLER_REGION: "截图过大，请选取更小区域。",
-    CONTEXT_TOO_LARGE: "内容过长，请缩短后附加。",
-  };
+  const t = createCompanionTranslator(language);
+  const key = `error.${code}`;
+  if (Object.hasOwn(companionEn, key)) return t(key as TranslationKey);
   if (code.startsWith("REMOTE_HTTP_"))
-    return `远程 Provider 拒绝请求（HTTP ${code.slice(12)}），请检查权限、模型和额度。`;
-  return (
-    errors[code] ??
-    (code.match(/^[A-Z_0-9]+$/)
-      ? `操作未完成：${code}`
-      : "本地操作未完成，请检查桌面运行环境。")
-  );
+    return t("error.http", { code: code.slice(12) });
+  return /^[A-Z_0-9]+$/.test(code)
+    ? t("error.code", { code })
+    : t("error.generic");
 }
 export function visibleMessage(content: string): string {
   return content

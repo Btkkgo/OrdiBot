@@ -1,6 +1,12 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { invoke, Channel, isTauri } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
+import { listen, emit } from "@tauri-apps/api/event";
 import {
   MessageCircle,
   ScanText,
@@ -23,6 +29,13 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useSurfaceDrag } from "./useSurfaceDrag";
+import {
+  applyAppearance,
+  normalizeAppearance,
+  type Appearance,
+} from "./appearance";
+import { UiProvider } from "./UiContext";
+import { createCompanionTranslator, taskStatusLabel } from "../i18n/companion";
 import { Character } from "./Character";
 import { ModelSettings } from "./ModelSettings";
 import { AgentWorkspace } from "./AgentWorkspace";
@@ -40,12 +53,12 @@ import {
   type PresenceSnapshot,
 } from "./types";
 const nav = [
-  { id: "chat", label: "Chat", Icon: MessageCircle },
-  { id: "context", label: "Context", Icon: ScanText },
-  { id: "agent", label: "Agent", Icon: Sparkles },
-  { id: "history", label: "History", Icon: History },
-  { id: "models", label: "Models", Icon: SlidersHorizontal },
-  { id: "settings", label: "Settings", Icon: Settings2 },
+  { id: "chat", label: "nav.chat", Icon: MessageCircle },
+  { id: "context", label: "nav.context", Icon: ScanText },
+  { id: "agent", label: "nav.agent", Icon: Sparkles },
+  { id: "history", label: "nav.history", Icon: History },
+  { id: "models", label: "nav.models", Icon: SlidersHorizontal },
+  { id: "settings", label: "nav.settings", Icon: Settings2 },
 ] as const;
 const initial: Snapshot = {
   data: { config: defaultConfig, conversations: [], tasks: [] },
@@ -62,7 +75,44 @@ export function CompanionApp() {
       return "";
     }
   });
-  const [error, setError] = useState("");
+  const [error, setError] = useState<unknown>("");
+  const [appearanceDraft, setAppearanceDraft] = useState<Appearance | null>(
+    null,
+  );
+  const appearance =
+    appearanceDraft ?? normalizeAppearance(snapshot.data.config);
+  const t = createCompanionTranslator(appearance.language);
+  const currentAppearance = useRef(appearance);
+  currentAppearance.current = appearance;
+  useEffect(() => {
+    if (!isTauri()) return;
+    let disposed = false;
+    let stop: (() => void) | undefined;
+    void listen("ordibot:appearance-request", () => {
+      void emit("ordibot:appearance-preview", currentAppearance.current);
+    }).then((fn) => {
+      if (disposed) fn();
+      else stop = fn;
+    });
+    return () => {
+      disposed = true;
+      stop?.();
+    };
+  }, []);
+  useEffect(() => {
+    applyAppearance(appearance);
+    if (isTauri()) {
+      void emit("ordibot:appearance-preview", appearance);
+      void invoke("preview_ui_language", {
+        language: appearance.language,
+      }).catch(setError);
+    }
+  }, [
+    appearance.language,
+    appearance.fontScale,
+    appearance.accentColor,
+    appearance.backgroundStyle,
+  ]);
   const [busy, setBusy] = useState(false);
   const [contextBusy, setContextBusy] = useState(false);
   const [conversation, setConversation] = useState<Conversation>();
@@ -73,7 +123,7 @@ export function CompanionApp() {
   const [attachedContext, setAttachedContext] = useState<DesktopContext>();
   const [focusContextInput, setFocusContextInput] = useState(false);
   const [reminder, setReminder] = useState<DesktopContext | null>(null);
-  const drag = useSurfaceDrag(undefined, (e) => setError(displayError(e)));
+  const drag = useSurfaceDrag(undefined, (e) => setError(e));
   const [taskId, setTaskId] = useState<string>();
   const [newTask, setNewTask] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -94,7 +144,7 @@ export function CompanionApp() {
     try {
       return await fn();
     } catch (e) {
-      setError(displayError(e));
+      setError(e);
       return undefined;
     }
   };
@@ -105,11 +155,10 @@ export function CompanionApp() {
       });
       setPage(next);
     } catch (e) {
-      setError(displayError(e));
+      setError(e);
     }
   }, []);
   useEffect(() => {
-    document.documentElement.lang = "zh-CN";
     let disposed = false;
     let stop: (() => void) | undefined;
     void refresh()
@@ -117,12 +166,7 @@ export function CompanionApp() {
         if (!disposed) setConversation(s.data.conversations[0]);
       })
       .catch((e) => {
-        if (!disposed)
-          setError(
-            isTauri()
-              ? displayError(e)
-              : "请使用 OrdiBot 原生桌面应用。浏览器预览无法读取桌面内容。",
-          );
+        if (!disposed) setError(isTauri() ? e : "LOCAL_NATIVE_REQUIRED");
       })
       .finally(() => {
         if (!disposed) setLoading(false);
@@ -227,7 +271,7 @@ export function CompanionApp() {
             }));
         })
         .catch((e) => {
-          if (!disposed) setError(displayError(e));
+          if (!disposed) setError(e);
         })
         .finally(() => {
           pollBusy.current = false;
@@ -312,12 +356,13 @@ export function CompanionApp() {
       setAttachments([]);
       await refresh();
     } catch (e) {
-      setError(displayError(e));
+      setError(e);
       setRetryText(text);
       try {
         const s = await refresh();
-        const persisted =
-          s.data.conversations.find((c) => c.id === turnConversationId);
+        const persisted = s.data.conversations.find(
+          (c) => c.id === turnConversationId,
+        );
         if (persisted) setConversation(persisted);
         else setConversation(previous);
       } catch {
@@ -351,554 +396,591 @@ export function CompanionApp() {
     void navigate("chat");
   };
   return (
-    <div
-      className={`companion-container dock-${snapshot.data.config.edgeSide} ${page === "agent" ? "agent-mode" : ""}`}
-      style={{ "--dock-vertical": snapshot.data.config.edgeVertical } as CSSProperties}
-    >
-      {page !== "agent" ? (
-        <aside className="character-zone" {...drag}>
-          <Character />
-        </aside>
-      ) : null}
-      <div className="companion-window">
-        {page === "agent" ? (
-          <div className="agent-titlebar" {...drag}>
-            <span className="traffic-lights">
-              <i />
-              <i />
-              <i />
-            </span>
-            <span>OrdiBot</span>
-            <div className="titlebar-right">
-              <span className="connected-label">
-                <span className="tiny-dot" />
-                {snapshot.remoteKeyPresent
-                  ? "Provider configured"
-                  : "Provider not configured"}
-              </span>
-              <button
-                title="收起窗口"
-                onClick={() =>
-                  void operation(() =>
-                    invoke("window_action", { action: "edge" }),
-                  )
-                }
-              >
-                <Minus size={16} />
-              </button>
-            </div>
-          </div>
+    <UiProvider appearance={appearance}>
+      <div
+        className={`companion-container dock-${snapshot.data.config.edgeSide} ${page === "agent" ? "agent-mode" : ""}`}
+        style={
+          {
+            "--dock-vertical": snapshot.data.config.edgeVertical,
+          } as CSSProperties
+        }
+      >
+        {page !== "agent" ? (
+          <aside className="character-zone" {...drag}>
+            <Character />
+          </aside>
         ) : null}
-        <div className="window-body">
-          <nav className="nav-rail" aria-label="主导航">
-            <div className="rail-top">
-              {nav.map(({ id, label, Icon }) => (
-                <button
-                  key={id}
-                  className={page === id ? "active" : ""}
-                  title={label}
-                  aria-label={label}
-                  onClick={() => void navigate(id)}
-                >
-                  <Icon size={19} strokeWidth={1.65} />
-                </button>
-              ))}
-            </div>
-            <button
-              className="rail-new"
-              title={page === "agent" ? "新建远程任务" : "新对话"}
-              aria-label="新对话"
-              disabled={busy}
-              onClick={() => {
-                if (page === "agent") {
-                  setNewTask(true);
-                  setTaskId(undefined);
-                } else startNew();
-              }}
-            >
-              <Plus size={19} />
-            </button>
-            <div className="rail-logo" title="OrdiBot">
-              o<span>•</span>
-            </div>
-          </nav>
-          <main
-            className={`main-content ${page === "agent" ? "agent-content" : ""}`}
-          >
-            {page !== "agent" ? (
-              <header className="chat-header" {...drag}>
-                <button
-                  className="current-model"
-                  onClick={() => void navigate("models")}
-                >
-                  <span
-                    className={`tiny-dot ${snapshot.keyPresent ? "ready" : ""}`}
-                  />
-                  <span>{snapshot.data.config.model || "选择模型"}</span>
-                  <ChevronDown size={12} />
-                </button>
-                <div className="window-controls">
-                  {snapshot.data.config.alwaysOnTop ? (
-                    <Pin size={12} className="pin-indicator" />
-                  ) : null}
-                  <button
-                    title="收起到边缘小宠物 · ⌘⇧Space 展开"
-                    aria-label="收起窗口"
-                    onClick={() =>
-                      void operation(() =>
-                        invoke("window_action", { action: "edge" }),
-                      )
-                    }
-                  >
-                    <Minus size={17} />
-                  </button>
-                </div>
-              </header>
-            ) : null}
-            {reminder && page !== "agent" ? (
-              <button
-                className="context-reminder-toast"
-                onClick={() => void operation(() => invoke("context_accept"))}
-              >
-                <Monitor size={14} />
-                <span>
-                  正在查看：{reminder.app}
-                  {reminder.window ? ` · ${reminder.window}` : ""}
-                </span>
-                <span className="muted">附加元数据</span>
-              </button>
-            ) : null}
-            {error ? (
-              <div className="inline-error" role="alert">
-                <span>{error}</span>
-                <button aria-label="关闭提示" onClick={() => setError("")}>
-                  <X size={13} />
-                </button>
-              </div>
-            ) : null}
-            {page === "models" || page === "settings" ? (
-              <ModelSettings
-                page={page}
-                snapshot={snapshot}
-                onSave={async (config, key, remoteKey) => {
-                  setError("");
-                  try {
-                    await invoke("save_companion_config", {
-                      config,
-                      apiKey: key || null,
-                      remoteApiKey: remoteKey || null,
-                    });
-                    await refresh();
-                  } catch (e) {
-                    setError(displayError(e));
-                    throw e;
-                  }
-                }}
-              />
-            ) : page === "agent" ? (
-              <AgentWorkspace
-                snapshot={snapshot}
-                task={task}
-                onSubmit={async (objective) => {
-                  const t = await operation(() =>
-                    invoke<RemoteTask>("remote_submit", { objective }),
-                  );
-                  if (t) updateTask(t);
-                }}
-                onRefresh={async () => {
-                  if (task) {
-                    const t = await operation(() =>
-                      invoke<RemoteTask>("remote_refresh", { taskId: task.id }),
-                    );
-                    if (t) updateTask(t);
-                  }
-                }}
-                onControl={async (action, requestId) => {
-                  if (task) {
-                    const t = await operation(() =>
-                      invoke<RemoteTask>("remote_control", {
-                        taskId: task.id,
-                        action,
-                        requestId: requestId ?? null,
-                      }),
-                    );
-                    if (t) updateTask(t);
-                  }
-                }}
-                onNavigate={(p) => void navigate(p)}
-                onSelect={(id) => {
-                  setTaskId(id);
-                  setNewTask(false);
-                }}
-                onOpen={(service) =>
-                  void operation(() => invoke("open_service", { service }))
-                }
-              />
-            ) : page === "history" ? (
-              <div className="history-view">
-                <div className="eyebrow">YOUR CONVERSATIONS</div>
-                <h1>历史记录</h1>
-                <button className="outline" disabled={busy} onClick={startNew}>
-                  <Plus size={15} /> 新对话
-                </button>
-                <h2>Chat</h2>
-                {snapshot.data.conversations.length === 0 ? (
-                  <p className="muted">还没有对话记录。</p>
-                ) : (
-                  snapshot.data.conversations.map((c) => (
-                    <button
-                      className="history-item"
-                      disabled={busy}
-                      key={c.id}
-                      onClick={() => {
-                        setConversation(c);
-                        void navigate("chat");
-                      }}
-                    >
-                      <MessageCircle size={17} />
-                      <span>{c.title}</span>
-                      <small>{c.messages.length} 条消息</small>
-                    </button>
-                  ))
-                )}
-                <h2>Remote Agent</h2>
-                {snapshot.data.tasks.length === 0 ? (
-                  <p className="muted">还没有远程任务。</p>
-                ) : (
-                  snapshot.data.tasks.map((t) => (
-                    <button
-                      className="history-item"
-                      key={t.id}
-                      onClick={() => {
-                        setTaskId(t.id);
-                        setNewTask(false);
-                        void navigate("agent");
-                      }}
-                    >
-                      <Sparkles size={17} />
-                      <span>{t.objective}</span>
-                      <small>{t.status}</small>
-                    </button>
-                  ))
-                )}
-              </div>
-            ) : (
-              <>
-                <div className="context-status">
+        <div className="companion-window">
+          {page === "agent" ? (
+            <div className="agent-titlebar" {...drag}>
+              <span className="traffic-lights">
+                <i />
+                <i />
+                <i />
+              </span>
+              <span>OrdiBot</span>
+              <div className="titlebar-right">
+                <span className="connected-label">
                   <span className="tiny-dot" />
-                  {context?.available
-                    ? `${context.app}${context.window ? " · " + context.window : ""}（仅应用/标题）`
-                    : "未读取电脑内容"}
+                  {snapshot.remoteKeyPresent
+                    ? t("providerConfigured")
+                    : t("providerUnconfigured")}
+                </span>
+                <button
+                  title={t("collapse")}
+                  onClick={() =>
+                    void operation(() =>
+                      invoke("window_action", { action: "edge" }),
+                    )
+                  }
+                >
+                  <Minus size={16} />
+                </button>
+              </div>
+            </div>
+          ) : null}
+          <div className="window-body">
+            <nav className="nav-rail" aria-label={t("mainNav")}>
+              <div className="rail-top">
+                {nav.map(({ id, label, Icon }) => (
                   <button
-                    title="主动读取当前 App / Window"
-                    aria-label="刷新当前 App 信息"
-                    disabled={contextBusy || busy}
-                    onClick={() => void attach("app")}
+                    key={id}
+                    className={page === id ? "active" : ""}
+                    title={t(label)}
+                    aria-label={t(label)}
+                    onClick={() => void navigate(id)}
                   >
-                    <RefreshCw size={12} />
+                    <Icon size={19} strokeWidth={1.65} />
+                  </button>
+                ))}
+              </div>
+              <button
+                className="rail-new"
+                title={t(page === "agent" ? "newTask" : "newChat")}
+                aria-label={t("newChat")}
+                disabled={busy}
+                onClick={() => {
+                  if (page === "agent") {
+                    setNewTask(true);
+                    setTaskId(undefined);
+                  } else startNew();
+                }}
+              >
+                <Plus size={19} />
+              </button>
+              <div className="rail-logo" title="OrdiBot">
+                o<span>•</span>
+              </div>
+            </nav>
+            <main
+              className={`main-content ${page === "agent" ? "agent-content" : ""}`}
+            >
+              {page !== "agent" ? (
+                <header className="chat-header" {...drag}>
+                  <button
+                    className="current-model"
+                    onClick={() => void navigate("models")}
+                  >
+                    <span
+                      className={`tiny-dot ${snapshot.keyPresent ? "ready" : ""}`}
+                    />
+                    <span>
+                      {snapshot.data.config.model || t("chooseModel")}
+                    </span>
+                    <ChevronDown size={12} />
+                  </button>
+                  <div className="window-controls">
+                    {snapshot.data.config.alwaysOnTop ? (
+                      <Pin size={12} className="pin-indicator" />
+                    ) : null}
+                    <button
+                      title={t("collapseHelp")}
+                      aria-label={t("collapse")}
+                      onClick={() =>
+                        void operation(() =>
+                          invoke("window_action", { action: "edge" }),
+                        )
+                      }
+                    >
+                      <Minus size={17} />
+                    </button>
+                  </div>
+                </header>
+              ) : null}
+              {reminder && page !== "agent" ? (
+                <button
+                  className="context-reminder-toast"
+                  onClick={() => void operation(() => invoke("context_accept"))}
+                >
+                  <Monitor size={14} />
+                  <span>
+                    {t("viewing", { app: reminder.app })}
+                    {reminder.window ? ` · ${reminder.window}` : ""}
+                  </span>
+                  <span className="muted">{t("attachMetadata")}</span>
+                </button>
+              ) : null}
+              {error ? (
+                <div className="inline-error" role="alert">
+                  <span>{displayError(error, appearance.language)}</span>
+                  <button
+                    aria-label={t("dismiss")}
+                    onClick={() => setError("")}
+                  >
+                    <X size={13} />
                   </button>
                 </div>
-                <div className="chat-scroll">
-                  {page === "context" ? (
-                    <div className="context-panel">
-                      <div className="eyebrow">CONTEXT ASSISTANT</div>
-                      <h2>围绕眼前的内容提问</h2>
-                      <p>先主动附加，再发送问题。</p>
+              ) : null}
+              {page === "models" || page === "settings" ? (
+                <ModelSettings
+                  page={page}
+                  snapshot={snapshot}
+                  appearance={appearance}
+                  onPreview={(next) =>
+                    setAppearanceDraft(normalizeAppearance(next))
+                  }
+                  onSave={async (config, key, remoteKey) => {
+                    setError("");
+                    try {
+                      await invoke("save_companion_config", {
+                        config,
+                        apiKey: key || null,
+                        remoteApiKey: remoteKey || null,
+                      });
+                      await refresh();
+                      setAppearanceDraft(null);
+                    } catch (e) {
+                      setError(e);
+                      throw e;
+                    }
+                  }}
+                />
+              ) : page === "agent" ? (
+                <AgentWorkspace
+                  snapshot={snapshot}
+                  task={task}
+                  onSubmit={async (objective) => {
+                    const t = await operation(() =>
+                      invoke<RemoteTask>("remote_submit", { objective }),
+                    );
+                    if (t) updateTask(t);
+                  }}
+                  onRefresh={async () => {
+                    if (task) {
+                      const t = await operation(() =>
+                        invoke<RemoteTask>("remote_refresh", {
+                          taskId: task.id,
+                        }),
+                      );
+                      if (t) updateTask(t);
+                    }
+                  }}
+                  onControl={async (action, requestId) => {
+                    if (task) {
+                      const t = await operation(() =>
+                        invoke<RemoteTask>("remote_control", {
+                          taskId: task.id,
+                          action,
+                          requestId: requestId ?? null,
+                        }),
+                      );
+                      if (t) updateTask(t);
+                    }
+                  }}
+                  onNavigate={(p) => void navigate(p)}
+                  onSelect={(id) => {
+                    setTaskId(id);
+                    setNewTask(false);
+                  }}
+                  onOpen={(service) =>
+                    void operation(() => invoke("open_service", { service }))
+                  }
+                />
+              ) : page === "history" ? (
+                <div className="history-view">
+                  <div className="eyebrow">{t("historyKicker")}</div>
+                  <h1>{t("historyTitle")}</h1>
+                  <button
+                    className="outline"
+                    disabled={busy}
+                    onClick={startNew}
+                  >
+                    <Plus size={15} /> {t("newChat")}
+                  </button>
+                  <h2>Chat</h2>
+                  {snapshot.data.conversations.length === 0 ? (
+                    <p className="muted">{t("noConversations")}</p>
+                  ) : (
+                    snapshot.data.conversations.map((c) => (
                       <button
-                        disabled={contextBusy || busy}
-                        onClick={() => void attach("clipboard")}
-                      >
-                        <Clipboard size={16} />
-                        <span>
-                          Ask about Selection
-                          <small>先复制选中文字，再附加</small>
-                        </span>
-                      </button>
-                      <button
-                        disabled={contextBusy || busy}
-                        onClick={() => void attach("screen")}
-                      >
-                        <ImagePlus size={16} />
-                        <span>
-                          Ask about Screen
-                          <small>截取屏幕，预览后确认</small>
-                        </span>
-                      </button>
-                      <button
-                        disabled={contextBusy || busy}
-                        onClick={() => void attach("screen", true)}
-                      >
-                        <ImagePlus size={16} />
-                        <span>
-                          区域截图<small>macOS 拖选区域 · Esc 取消</small>
-                        </span>
-                      </button>
-                      <button
+                        className="history-item"
                         disabled={busy}
+                        key={c.id}
                         onClick={() => {
-                          setAttachments([]);
+                          setConversation(c);
                           void navigate("chat");
                         }}
                       >
-                        <MessageCircle size={16} />
-                        <span>
-                          Normal Chat<small>不附加电脑内容</small>
-                        </span>
+                        <MessageCircle size={17} />
+                        <span>{c.title}</span>
+                        <small>
+                          {t("messageCount", { count: c.messages.length })}
+                        </small>
                       </button>
-                    </div>
-                  ) : null}
-                  {!conversation?.messages.length ? (
-                    <div className="welcome">
-                      <span className="welcome-kicker">HELLO, I'M ORDIBOT</span>
-                      <h1>有什么我能帮你？</h1>
-                      <p>聊一聊，或者附加你眼前的内容。</p>
-                      <div className="welcome-actions">
-                        <button
-                          disabled={contextBusy}
-                          onClick={() => void attach("clipboard")}
-                        >
-                          <Clipboard size={14} /> 选中文字
-                        </button>
-                        <button
-                          disabled={contextBusy}
-                          onClick={() => void attach("screen")}
-                        >
-                          <ImagePlus size={14} /> 截图提问
-                        </button>
-                      </div>
-                      {!snapshot.data.config.model ? (
-                        <button
-                          className="configure-hint"
-                          onClick={() => void navigate("models")}
-                        >
-                          连接你的 AI 模型 <ChevronDown size={12} />
-                        </button>
-                      ) : null}
-                    </div>
-                  ) : (
-                    conversation.messages.map((m, index) => (
-                      <article
-                        className={`chat-message ${m.role}`}
-                        key={`${conversation.id}-${index}`}
-                      >
-                        <div className="message-content">
-                          {visibleMessage(m.content)}
-                        </div>
-                        {m.content.includes(
-                          "<user_attached_clipboard_text>",
-                        ) ? (
-                          <span className="message-context">
-                            <Clipboard size={11} /> 已附加文字
-                          </span>
-                        ) : null}
-                        {m.content.includes("[User-confirmed screenshot") ? (
-                          <span className="message-context">
-                            <ImagePlus size={11} /> 已附加截图
-                          </span>
-                        ) : null}
-                      </article>
                     ))
                   )}
-                  {busy ? (
-                    <article className="chat-message assistant generating">
-                      <div className="message-content">
-                        {draft || (
-                          <span className="typing-dots">
-                            <i />
-                            <i />
-                            <i />
-                          </span>
-                        )}
-                      </div>
+                  <h2>{t("remoteAgent")}</h2>
+                  {snapshot.data.tasks.length === 0 ? (
+                    <p className="muted">{t("noTasks")}</p>
+                  ) : (
+                    snapshot.data.tasks.map((t) => (
                       <button
-                        title="取消生成"
-                        onClick={() =>
-                          void operation(() => invoke("chat_cancel"))
-                        }
+                        className="history-item"
+                        key={t.id}
+                        onClick={() => {
+                          setTaskId(t.id);
+                          setNewTask(false);
+                          void navigate("agent");
+                        }}
                       >
-                        <Square size={12} /> 取消
+                        <Sparkles size={17} />
+                        <span>{t.objective}</span>
+                        <small>
+                          {taskStatusLabel(t.status, appearance.language)}
+                        </small>
                       </button>
-                    </article>
-                  ) : null}
-                  <div ref={bottom} />
+                    ))
+                  )}
                 </div>
-                <div className="chat-bottom">
-                  {attachedContext &&
-                  attachments.some((a) => a.kind === "app") &&
-                  !attachments.some((a) => a.kind !== "app") ? (
-                    <div className="attached-context-guide">
-                      <strong>
-                        已附加：{attachedContext.app}
-                        {attachedContext.window
-                          ? ` · ${attachedContext.window}`
-                          : ""}
-                      </strong>
-                      <p>
-                        目前仅有应用/标题。总结、翻译或检查正文时，请主动附加文字或截图。
-                      </p>
-                      <div className="attached-context-actions">
+              ) : (
+                <>
+                  <div className="context-status">
+                    <span className="tiny-dot" />
+                    {context?.available
+                      ? `${context.app}${context.window ? " · " + context.window : ""} · ${t("metadataOnly")}`
+                      : t("noContent")}
+                    <button
+                      title={t("refreshContextHelp")}
+                      aria-label={t("refreshContext")}
+                      disabled={contextBusy || busy}
+                      onClick={() => void attach("app")}
+                    >
+                      <RefreshCw size={12} />
+                    </button>
+                  </div>
+                  <div className="chat-scroll">
+                    {page === "context" ? (
+                      <div className="context-panel">
+                        <div className="eyebrow">{t("nav.context")}</div>
+                        <h2>{t("contextTitle")}</h2>
+                        <p>{t("contextIntro")}</p>
                         <button
                           disabled={contextBusy || busy}
                           onClick={() => void attach("clipboard")}
                         >
-                          <Clipboard size={13} /> 附加复制的文字
+                          <Clipboard size={16} />
+                          <span>
+                            {t("selection")}
+                            <small>{t("selectionHelp")}</small>
+                          </span>
                         </button>
                         <button
                           disabled={contextBusy || busy}
                           onClick={() => void attach("screen")}
                         >
-                          <ImagePlus size={13} /> 截图并确认
+                          <ImagePlus size={16} />
+                          <span>
+                            {t("screen")}
+                            <small>{t("screenHelp")}</small>
+                          </span>
+                        </button>
+                        <button
+                          disabled={contextBusy || busy}
+                          onClick={() => void attach("screen", true)}
+                        >
+                          <ImagePlus size={16} />
+                          <span>
+                            {t("region")}
+                            <small>{t("regionHelp")}</small>
+                          </span>
+                        </button>
+                        <button
+                          disabled={busy}
+                          onClick={() => {
+                            setAttachments([]);
+                            void navigate("chat");
+                          }}
+                        >
+                          <MessageCircle size={16} />
+                          <span>
+                            {t("normalChat")}
+                            <small>{t("normalChatHelp")}</small>
+                          </span>
                         </button>
                       </div>
-                    </div>
-                  ) : null}
-                  {attachments.length > 0 ? (
-                    <div className="attachments">
-                      {attachments.map((a, i) => (
-                        <div className="attachment-chip" key={a.kind}>
-                          {a.kind === "screen" ? (
-                            <ImagePlus size={13} />
-                          ) : a.kind === "clipboard" ? (
-                            <Clipboard size={13} />
-                          ) : (
-                            <Monitor size={13} />
-                          )}
-                          <span>
-                            {a.kind === "screen"
-                              ? "已确认截图"
-                              : a.kind === "clipboard"
-                                ? `${a.content.length} 字 · 复制的内容`
-                                : "App / Window 信息"}
-                          </span>
+                    ) : null}
+                    {!conversation?.messages.length ? (
+                      <div className="welcome">
+                        <span className="welcome-kicker">
+                          {t("welcomeKicker")}
+                        </span>
+                        <h1>{t("welcomeTitle")}</h1>
+                        <p>{t("welcomeIntro")}</p>
+                        <div className="welcome-actions">
                           <button
-                            disabled={busy}
-                            aria-label="移除附件"
-                            onClick={() =>
-                              setAttachments((list) =>
-                                list.filter((_, j) => i !== j),
-                              )
-                            }
+                            disabled={contextBusy}
+                            onClick={() => void attach("clipboard")}
                           >
-                            <X size={12} />
+                            <Clipboard size={14} /> {t("selectedText")}
                           </button>
-                          {a.kind === "clipboard" ? (
-                            <details>
-                              <summary>查看</summary>
-                              <pre>{a.content}</pre>
-                            </details>
-                          ) : null}
+                          <button
+                            disabled={contextBusy}
+                            onClick={() => void attach("screen")}
+                          >
+                            <ImagePlus size={14} /> {t("askScreenshot")}
+                          </button>
                         </div>
-                      ))}
-                    </div>
-                  ) : null}
-                  <div className="composer">
-                    <textarea
-                      ref={inputRef}
-                      aria-label="消息输入"
-                      value={input}
-                      rows={1}
-                      disabled={busy}
-                      onChange={(e) => setInput(e.target.value)}
-                      placeholder="输入消息…"
-                      onKeyDown={(e) => {
-                        if (
-                          e.key === "Enter" &&
-                          !e.shiftKey &&
-                          !e.nativeEvent.isComposing
-                        ) {
-                          e.preventDefault();
-                          void send();
-                        }
-                      }}
-                    />
-                    <button
-                      className="send"
-                      title="发送消息"
-                      aria-label="发送消息"
-                      disabled={busy || !input.trim()}
-                      onClick={() => void send()}
-                    >
-                      <ArrowUp size={19} />
-                    </button>
-                  </div>
-                  <div className="composer-footer">
-                    <div>
-                      <button
-                        title="附加复制的选中文字"
-                        aria-label="附加选中文字"
-                        disabled={contextBusy || busy}
-                        onClick={() => void attach("clipboard")}
-                      >
-                        <Clipboard size={15} />
-                      </button>
-                      <button
-                        title="主动截图并预览确认"
-                        aria-label="截取屏幕"
-                        disabled={contextBusy || busy}
-                        onClick={() => void attach("screen")}
-                      >
-                        <ImagePlus size={15} />
-                      </button>
-                    </div>
-                    <span>
-                      {contextBusy
-                        ? "正在获取内容…"
-                        : busy
-                          ? "模型正在生成…"
-                          : snapshot.data.config.contextReminders
-                            ? "仅检测应用/标题；内容需主动附加"
-                            : "只读取你主动附加的内容"}
-                    </span>
-                    {retryText && !busy ? (
-                      <button title="重试" onClick={() => void send(retryText)}>
-                        <RotateCcw size={13} />
-                      </button>
+                        {!snapshot.data.config.model ? (
+                          <button
+                            className="configure-hint"
+                            onClick={() => void navigate("models")}
+                          >
+                            {t("connectModel")} <ChevronDown size={12} />
+                          </button>
+                        ) : null}
+                      </div>
                     ) : (
-                      <span className="style-label">
-                        {snapshot.data.config.style === "concise" ? "简洁" : ""}
-                      </span>
+                      conversation.messages.map((m, index) => (
+                        <article
+                          className={`chat-message ${m.role}`}
+                          key={`${conversation.id}-${index}`}
+                        >
+                          <div className="message-content">
+                            {visibleMessage(m.content)}
+                          </div>
+                          {m.content.includes(
+                            "<user_attached_clipboard_text>",
+                          ) ? (
+                            <span className="message-context">
+                              <Clipboard size={11} /> {t("textAttached")}
+                            </span>
+                          ) : null}
+                          {m.content.includes("[User-confirmed screenshot") ? (
+                            <span className="message-context">
+                              <ImagePlus size={11} /> {t("screenAttached")}
+                            </span>
+                          ) : null}
+                        </article>
+                      ))
                     )}
+                    {busy ? (
+                      <article className="chat-message assistant generating">
+                        <div className="message-content">
+                          {draft || (
+                            <span className="typing-dots">
+                              <i />
+                              <i />
+                              <i />
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          title={t("cancelGeneration")}
+                          onClick={() =>
+                            void operation(() => invoke("chat_cancel"))
+                          }
+                        >
+                          <Square size={12} /> {t("cancel")}
+                        </button>
+                      </article>
+                    ) : null}
+                    <div ref={bottom} />
                   </div>
-                </div>
-              </>
-            )}
-          </main>
-        </div>
-      </div>
-      {loading ? (
-        <div className="loading-indicator">正在读取本地设置…</div>
-      ) : null}
-      {preview ? (
-        <div
-          className="screenshot-preview"
-          role="dialog"
-          aria-modal="true"
-          aria-label="截图预览"
-        >
-          <div>
-            <h2>确认要附加的截图</h2>
-            <p>发送消息时，截图才会交给所选模型。</p>
-            <img src={preview} alt="用户主动截取的上下文预览" />
-            <div className="preview-controls">
-              <button className="outline" onClick={() => setPreview("")}>
-                取消
-              </button>
-              <button
-                className="primary"
-                onClick={() => {
-                  setAttachments((a) => [
-                    ...a.filter((v) => v.kind !== "screen"),
-                    { kind: "screen", content: preview },
-                  ]);
-                  setPreview("");
-                }}
-              >
-                <Check size={15} /> 确认附加
-              </button>
-            </div>
+                  <div className="chat-bottom">
+                    {attachedContext &&
+                    attachments.some((a) => a.kind === "app") &&
+                    !attachments.some((a) => a.kind !== "app") ? (
+                      <div className="attached-context-guide">
+                        <strong>
+                          {t("acceptedContext", { app: attachedContext.app })}
+                          {attachedContext.window
+                            ? ` · ${attachedContext.window}`
+                            : ""}
+                        </strong>
+                        <p>{t("acceptedHelp")}</p>
+                        <div className="attached-context-actions">
+                          <button
+                            disabled={contextBusy || busy}
+                            onClick={() => void attach("clipboard")}
+                          >
+                            <Clipboard size={13} /> {t("attachCopied")}
+                          </button>
+                          <button
+                            disabled={contextBusy || busy}
+                            onClick={() => void attach("screen")}
+                          >
+                            <ImagePlus size={13} /> {t("captureConfirm")}
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
+                    {attachments.length > 0 ? (
+                      <div className="attachments">
+                        {attachments.map((a, i) => (
+                          <div className="attachment-chip" key={a.kind}>
+                            {a.kind === "screen" ? (
+                              <ImagePlus size={13} />
+                            ) : a.kind === "clipboard" ? (
+                              <Clipboard size={13} />
+                            ) : (
+                              <Monitor size={13} />
+                            )}
+                            <span>
+                              {a.kind === "screen"
+                                ? t("confirmedScreenshot")
+                                : a.kind === "clipboard"
+                                  ? t("copiedCount", {
+                                      count: a.content.length,
+                                    })
+                                  : t("appWindow")}
+                            </span>
+                            <button
+                              disabled={busy}
+                              aria-label={t("removeAttachment")}
+                              onClick={() =>
+                                setAttachments((list) =>
+                                  list.filter((_, j) => i !== j),
+                                )
+                              }
+                            >
+                              <X size={12} />
+                            </button>
+                            {a.kind === "clipboard" ? (
+                              <details>
+                                <summary>{t("view")}</summary>
+                                <pre>{a.content}</pre>
+                              </details>
+                            ) : null}
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                    <div className="composer">
+                      <textarea
+                        ref={inputRef}
+                        aria-label={t("messageInput")}
+                        value={input}
+                        rows={1}
+                        disabled={busy}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder={t("messagePlaceholder")}
+                        onKeyDown={(e) => {
+                          if (
+                            e.key === "Enter" &&
+                            !e.shiftKey &&
+                            !e.nativeEvent.isComposing
+                          ) {
+                            e.preventDefault();
+                            void send();
+                          }
+                        }}
+                      />
+                      <button
+                        className="send"
+                        title={t("sendMessage")}
+                        aria-label={t("sendMessage")}
+                        disabled={busy || !input.trim()}
+                        onClick={() => void send()}
+                      >
+                        <ArrowUp size={19} />
+                      </button>
+                    </div>
+                    <div className="composer-footer">
+                      <div>
+                        <button
+                          title={t("selectionHelp")}
+                          aria-label={t("attachSelection")}
+                          disabled={contextBusy || busy}
+                          onClick={() => void attach("clipboard")}
+                        >
+                          <Clipboard size={15} />
+                        </button>
+                        <button
+                          title={t("captureScreenHelp")}
+                          aria-label={t("captureScreen")}
+                          disabled={contextBusy || busy}
+                          onClick={() => void attach("screen")}
+                        >
+                          <ImagePlus size={15} />
+                        </button>
+                      </div>
+                      <span>
+                        {t(
+                          contextBusy
+                            ? "acquiring"
+                            : busy
+                              ? "generating"
+                              : snapshot.data.config.contextReminders
+                                ? "passiveNote"
+                                : "manualNote",
+                        )}
+                      </span>
+                      {retryText && !busy ? (
+                        <button
+                          title={t("retry")}
+                          onClick={() => void send(retryText)}
+                        >
+                          <RotateCcw size={13} />
+                        </button>
+                      ) : (
+                        <span className="style-label">
+                          {snapshot.data.config.style === "concise"
+                            ? t("conciseShort")
+                            : ""}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </main>
           </div>
         </div>
-      ) : null}
-    </div>
+        {loading ? (
+          <div className="loading-indicator">{t("loadingSettings")}</div>
+        ) : null}
+        {preview ? (
+          <div
+            className="screenshot-preview"
+            role="dialog"
+            aria-modal="true"
+            aria-label={t("screenshotPreview")}
+          >
+            <div>
+              <h2>{t("screenshotConfirmTitle")}</h2>
+              <p>{t("screenshotPrivacy")}</p>
+              <img src={preview} alt={t("screenshotAlt")} />
+              <div className="preview-controls">
+                <button className="outline" onClick={() => setPreview("")}>
+                  {t("cancel")}
+                </button>
+                <button
+                  className="primary"
+                  onClick={() => {
+                    setAttachments((a) => [
+                      ...a.filter((v) => v.kind !== "screen"),
+                      { kind: "screen", content: preview },
+                    ]);
+                    setPreview("");
+                  }}
+                >
+                  <Check size={15} /> {t("confirmAttach")}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </UiProvider>
   );
 }

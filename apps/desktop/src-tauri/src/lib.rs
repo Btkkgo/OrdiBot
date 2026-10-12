@@ -1,4 +1,5 @@
 mod companion_commands;
+mod companion_menu;
 mod companion_platform;
 mod companion_presence;
 mod companion_remote;
@@ -45,21 +46,7 @@ pub fn run() {
                     }
                 });
             }
-            let show =
-                tauri::menu::MenuItem::with_id(app, "show", "Open OrdiBot", true, None::<&str>)?;
-            let agent = tauri::menu::MenuItem::with_id(
-                app,
-                "agent",
-                "Agent Workspace",
-                true,
-                None::<&str>,
-            )?;
-            let quit =
-                tauri::menu::MenuItem::with_id(app, "quit", "Quit OrdiBot", true, None::<&str>)?;
-            let edge = tauri::menu::MenuItem::with_id(app, "edge", "Edge Pet", true, None::<&str>)?;
-            let hidden =
-                tauri::menu::MenuItem::with_id(app, "hidden", "Hide OrdiBot", true, None::<&str>)?;
-            let menu = tauri::menu::Menu::with_items(app, &[&show, &edge, &agent, &hidden, &quit])?;
+            let menu = companion_menu::create(app, &data.config.language)?;
             let mut tray = tauri::tray::TrayIconBuilder::new()
                 .tooltip("OrdiBot · Your Desktop AI Companion")
                 .menu(&menu)
@@ -103,6 +90,7 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            companion_menu::preview_ui_language,
             companion_presence::presence_snapshot,
             companion_presence::presence_action,
             companion_presence::context_accept,

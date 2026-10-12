@@ -14,4 +14,4 @@ The approved V1 scope prioritizes a usable local Mac companion. See [current ver
 | G5 | Isolated Windows adapters and independent native CI | Windows 11 interactive/context/API acceptance |
 | G5 | Active financial retirement, branding, bilingual records, same-repository rename | Same-repository identity/refs/139 stars verified; PR #18 merged into public main |
 
-Follow-ups: English UI localization, restored image reattachment UX, more provider adapters only after verified official task APIs, and proportional usability improvements. No independent pet, autonomous local computer engine, financial product, Android automation, self-hosted cloud VM, Apple commercial signing or App Store work is planned for this V1.
+G6.1 implements active-UI localization and typography/theme presets; see current status for actual native acceptance. Follow-ups: restored image reattachment UX, more provider adapters only after verified official task APIs, and proportional usability improvements. No independent pet, autonomous local computer engine, financial product, Android automation, self-hosted cloud VM, Apple commercial signing or App Store work is planned for this V1.

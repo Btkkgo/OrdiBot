@@ -13,22 +13,9 @@ import {
   RefreshCw,
 } from "lucide-react";
 import type { RemoteTask, Snapshot } from "./types";
-import { terminalTask } from "./types";
-const statusText: Record<string, string> = {
-  submitting: "提交中",
-  running: "运行中",
-  in_progress: "运行中",
-  completed: "已完成",
-  failed: "失败",
-  cancelled: "已取消",
-  requires_action: "等待确认",
-  cancellation_requested: "已请求取消",
-  released: "云端环境已释放",
-  submission_unknown: "提交结果未知",
-  idle: "Provider 空闲 · 等待任务结果",
-  awaiting_provider: "等待 Provider",
-  approval_response_sent: "已提交确认 · 等待 Provider",
-};
+import { terminalTask, displayError } from "./types";
+import { useUi } from "./UiContext";
+import { taskStatusLabel } from "../i18n/companion";
 export function AgentWorkspace({
   snapshot,
   task,
@@ -48,6 +35,7 @@ export function AgentWorkspace({
   onSelect: (id: string) => void;
   onOpen: (service: string) => void;
 }) {
+  const { t, language } = useUi();
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [expand, setExpand] = useState(false);
@@ -78,8 +66,8 @@ export function AgentWorkspace({
       <header className="agent-heading">
         <div>
           <div className="eyebrow">ORDIBOT AGENT</div>
-          <h1>远程任务工作台</h1>
-          <p>把任务交给云端浏览器，在这里跟进真实进度与结果。</p>
+          <h1>{t("agentTitle")}</h1>
+          <p>{t("agentIntro")}</p>
         </div>
         <div className="agent-toolbar">
           <button
@@ -87,14 +75,14 @@ export function AgentWorkspace({
             className="model-selector"
           >
             <span className="provider-label">OPENAI</span>{" "}
-            {snapshot.data.config.remoteModel || "选择模型"}{" "}
+            {snapshot.data.config.remoteModel || t("chooseModel")}{" "}
             <ChevronRight size={13} />
           </button>
           <button onClick={() => onNavigate("history")}>
-            <History size={17} /> History
+            <History size={17} /> {t("nav.history")}
           </button>
           <button onClick={() => onNavigate("settings")}>
-            <Settings2 size={17} /> Settings
+            <Settings2 size={17} /> {t("nav.settings")}
           </button>
         </div>
       </header>
@@ -105,29 +93,25 @@ export function AgentWorkspace({
               <div className="agent-orb">
                 <Globe size={28} />
               </div>
-              <h2>给任务一个明确的目标</h2>
-              <p>
-                访问公开网页、对比产品、研究 GitHub 仓库。
-                <br />
-                任务在 Provider 托管的环境里进行。
-              </p>
+              <h2>{t("agentEmptyTitle")}</h2>
+              <p>{t("agentEmptyIntro")}</p>
               {!snapshot.remoteKeyPresent ? (
                 <button
                   onClick={() => onNavigate("models")}
                   className="outline"
                 >
-                  配置远程 Provider
+                  {t("configureRemote")}
                 </button>
               ) : (
                 <span className="status-badge ready">
-                  本地密钥已配置 · 尚未验证服务可用性
+                  {t("remoteKeyReady")}
                 </span>
               )}
               <div className="task-examples">
                 {[
-                  "访问指定公开网页，比较产品价格。",
-                  "研究指定 GitHub 仓库，整理存在的问题。",
-                  "浏览指定网站，提取公开信息并生成报告。",
+                  t("example.price"),
+                  t("example.repo"),
+                  t("example.report"),
                 ].map((s) => (
                   <button key={s} onClick={() => setInput(s)}>
                     <ArrowUp size={13} />
@@ -137,7 +121,7 @@ export function AgentWorkspace({
               </div>
             </div>
             <div className="service-links">
-              <span>Muse / Grok Bot：原生 API 尚未确认，保留外部入口</span>
+              <span>{t("externalServices")}</span>
               <button onClick={() => onOpen("muse")}>
                 Muse <ExternalLink size={12} />
               </button>
@@ -153,21 +137,21 @@ export function AgentWorkspace({
                 <span
                   className={`status-badge ${task.status === "completed" ? "ready" : ""}`}
                 >
-                  {statusText[task.status] ?? task.status}
+                  {taskStatusLabel(task.status, language)}
                 </span>
                 <p>
-                  <span className="muted">TASK</span> {task.objective}
+                  <span className="muted">{t("task")}</span> {task.objective}
                 </p>
                 <div className="task-controls">
                   <button
-                    title="刷新 Provider 状态"
+                    title={t("refreshProvider")}
                     onClick={() => void onRefresh()}
                   >
                     <RefreshCw size={17} />
                   </button>
                   {task.sessionId && !terminalTask(task.status) ? (
                     <button
-                      title="向 Provider 请求取消"
+                      title={t("cancelProvider")}
                       onClick={() => void onControl("cancel")}
                     >
                       <Square size={17} />
@@ -180,25 +164,34 @@ export function AgentWorkspace({
                   <Clock3 size={14} /> {Math.floor(elapsed / 60)}:
                   {String(elapsed % 60).padStart(2, "0")}
                 </span>
-                <span>{task.items.length} 个 Provider 记录</span>
-                <span>不提供百分比进度</span>
+                <span>{t("records", { count: task.items.length })}</span>
+                <span>{t("noPercent")}</span>
               </div>
-              {task.error ? <p className="task-error">{task.error}</p> : null}
+              {task.error ? (
+                <p className="task-error">
+                  {/^[A-Z_0-9]+$/.test(task.error)
+                    ? displayError(task.error, language)
+                    : task.error}
+                </p>
+              ) : null}
             </section>
             {task.requiredActions.map((approval, index) => {
               const request = approval.request as
-                Record<string, unknown> | undefined;
+                | Record<string, unknown>
+                | undefined;
               const id = String(approval.request_id ?? "");
               const supported =
                 approval.type === "computer_use_approval_request" &&
                 request?.type === "browser_origin_access";
               return (
                 <div className="approval-card" key={id || index}>
-                  <h3>需要人工确认</h3>
+                  <h3>{t("approvalTitle")}</h3>
                   <p>
                     {supported
-                      ? `允许云端浏览器访问 ${String(request?.origin ?? "此网站")}？`
-                      : "Provider 要求当前版本尚不支持的输入。任务将保持等待；可以取消。"}
+                      ? t("approvalOrigin", {
+                          origin: String(request?.origin ?? t("thisWebsite")),
+                        })
+                      : t("unsupportedApproval")}
                   </p>
                   {supported ? (
                     <div>
@@ -206,13 +199,13 @@ export function AgentWorkspace({
                         className="primary"
                         onClick={() => void onControl("approve", id)}
                       >
-                        允许此网站
+                        {t("allowWebsite")}
                       </button>
                       <button
                         className="outline"
                         onClick={() => void onControl("deny", id)}
                       >
-                        拒绝
+                        {t("deny")}
                       </button>
                     </div>
                   ) : null}
@@ -220,16 +213,14 @@ export function AgentWorkspace({
               );
             })}
             <div className="timeline-heading">
-              <span>{task.items.length} records</span>
+              <span>{t("records", { count: task.items.length })}</span>
               <button onClick={() => setExpand(!expand)}>
-                {expand ? "收起全部" : "展开全部"}
+                {t(expand ? "collapseAll" : "expandAll")}
               </button>
             </div>
             <div className="step-timeline">
               {task.items.length === 0 ? (
-                <p className="muted">
-                  尚无 Provider 步骤记录。提交状态不代表任务完成。
-                </p>
+                <p className="muted">{t("noProviderRecords")}</p>
               ) : (
                 task.items.map((item, index) => (
                   <details
@@ -245,8 +236,10 @@ export function AgentWorkspace({
                         )}
                       </span>
                       <span className="step-number">#{index + 1}</span>
-                      <span>{String(item.type ?? "Provider record")}</span>
-                      <span className="muted">{String(item.status ?? "")}</span>
+                      <span>{String(item.type ?? t("providerRecord"))}</span>
+                      <span className="muted">
+                        {taskStatusLabel(String(item.status ?? ""), language)}
+                      </span>
                     </summary>
                     <pre>{JSON.stringify(item, null, 2)}</pre>
                   </details>
@@ -255,7 +248,7 @@ export function AgentWorkspace({
             </div>
             {task.result ? (
               <section className="task-result">
-                <h2>Result</h2>
+                <h2>{t("result")}</h2>
                 <p>{task.result}</p>
               </section>
             ) : null}
@@ -263,14 +256,12 @@ export function AgentWorkspace({
             terminalTask(task.status) &&
             task.status !== "released" ? (
               <div className="cloud-cleanup">
-                <p className="muted">
-                  任务结束后可释放托管环境。费用与环境计费由 Provider 决定。
-                </p>
+                <p className="muted">{t("releaseInfo")}</p>
                 <button
                   className="outline"
                   onClick={() => void onControl("release")}
                 >
-                  释放云端环境
+                  {t("releaseEnvironment")}
                 </button>
               </div>
             ) : null}
@@ -278,11 +269,11 @@ export function AgentWorkspace({
         )}
         {snapshot.data.tasks.length > 0 ? (
           <div className="recent-tasks">
-            <h3>最近任务</h3>
+            <h3>{t("recentTasks")}</h3>
             {snapshot.data.tasks.slice(0, 5).map((t) => (
               <button key={t.id} onClick={() => onSelect(t.id)}>
                 <span>{t.objective}</span>
-                <small>{statusText[t.status] ?? t.status}</small>
+                <small>{taskStatusLabel(t.status, language)}</small>
               </button>
             ))}
           </div>
@@ -290,13 +281,14 @@ export function AgentWorkspace({
       </div>
       <div className="agent-composer">
         <textarea
+          aria-label={t("agentInput")}
           value={input}
           disabled={busy}
           onChange={(e) => setInput(e.target.value)}
           placeholder={
             snapshot.remoteKeyPresent
-              ? "描述远程任务…（Enter 发送，Shift + Enter 换行）"
-              : "先配置远程 Provider，再提交任务"
+              ? t("agentPlaceholder")
+              : t("agentConfigureFirst")
           }
           onKeyDown={(e) => {
             if (
@@ -311,7 +303,7 @@ export function AgentWorkspace({
         />
         <button
           className="primary send"
-          title="提交远程任务"
+          title={t("submitTask")}
           disabled={busy || !snapshot.remoteKeyPresent || !input.trim()}
           onClick={() => void submit()}
         >
@@ -320,10 +312,10 @@ export function AgentWorkspace({
       </div>
       <footer className="agent-footer">
         <span>
-          <span className="tiny-dot" /> OPENAI HOSTED · PUBLIC READ-ONLY
+          <span className="tiny-dot" /> {t("hostedReadOnly")}
         </span>
         <button onClick={() => onOpen("pricing")}>
-          费用与调用限制 <ExternalLink size={11} />
+          {t("pricing")} <ExternalLink size={11} />
         </button>
         <span>OrdiBot V1</span>
       </footer>

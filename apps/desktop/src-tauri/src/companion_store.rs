@@ -19,6 +19,10 @@ pub struct Config {
     pub browsers_editors_only: bool,
     pub edge_side: String,
     pub edge_vertical: f64,
+    pub language: String,
+    pub font_scale: u16,
+    pub accent_color: String,
+    pub background_style: String,
 }
 impl Default for Config {
     fn default() -> Self {
@@ -35,11 +39,28 @@ impl Default for Config {
             browsers_editors_only: false,
             edge_side: "left".into(),
             edge_vertical: 0.5,
+            language: "zh-CN".into(),
+            font_scale: 100,
+            accent_color: "purple".into(),
+            background_style: "graphite".into(),
         }
     }
 }
 impl Config {
     pub fn validate(&self) -> Result<(), String> {
+        if !matches!(self.language.as_str(), "zh-CN" | "en")
+            || ![90, 100, 110, 120, 130].contains(&self.font_scale)
+            || !matches!(
+                self.accent_color.as_str(),
+                "purple" | "blue" | "teal" | "amber" | "rose"
+            )
+            || !matches!(
+                self.background_style.as_str(),
+                "graphite" | "midnight" | "warm-charcoal"
+            )
+        {
+            return Err("INVALID_APPEARANCE_SETTINGS".into());
+        }
         let url = reqwest::Url::parse(&self.base_url).map_err(|_| "INVALID_BASE_URL")?;
         if (url.scheme() != "https"
             && !(url.scheme() == "http"
@@ -168,6 +189,90 @@ pub fn now() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn legacy_store_gets_appearance_defaults_without_losing_user_data() {
+        let old = serde_json::json!({
+            "config":{"model":"existing-model","edgeSide":"right","edgeVertical":0.73,"style":"detailed"},
+            "conversations":[{"id":"c","title":"用户原文","messages":[{"role":"user","content":"untouched 内容","createdAt":"2026-10-12"}]}],
+            "tasks":[{"id":"t","objective":"Original objective","sessionId":null,"status":"completed","createdAt":"2026-10-12","updatedAt":"2026-10-12","items":[{"type":"message","text":"Provider 原文"}],"requiredActions":[],"result":"Raw result","error":null}],
+            "chatGeometry":{"x":100,"y":200,"width":600,"height":850}
+        });
+        let stored: Stored = serde_json::from_value(old.clone()).unwrap();
+        let migrated = serde_json::to_value(&stored).unwrap();
+        assert_eq!(migrated["config"]["language"], "zh-CN");
+        assert_eq!(migrated["config"]["fontScale"], 100);
+        assert_eq!(migrated["config"]["accentColor"], "purple");
+        assert_eq!(migrated["config"]["backgroundStyle"], "graphite");
+        for field in ["conversations", "tasks", "chatGeometry"] {
+            assert_eq!(migrated[field], old[field]);
+        }
+        assert_eq!(migrated["config"]["edgeVertical"], 0.73);
+        assert_eq!(migrated["config"]["model"], "existing-model");
+        let d = tempfile::tempdir().unwrap();
+        let path = d.path().join("state.json");
+        let state = CompanionState::load(path.clone()).unwrap();
+        state.persist(&stored).unwrap();
+        assert_eq!(
+            serde_json::to_value(
+                CompanionState::load(path)
+                    .unwrap()
+                    .stored
+                    .into_inner()
+                    .unwrap()
+            )
+            .unwrap(),
+            migrated
+        );
+    }
+    #[test]
+    fn appearance_presets_validate_and_survive_restart() {
+        for (field, values) in [
+            (
+                "language",
+                vec![serde_json::json!("zh-CN"), serde_json::json!("en")],
+            ),
+            (
+                "fontScale",
+                vec![90.into(), 100.into(), 110.into(), 120.into(), 130.into()],
+            ),
+            (
+                "accentColor",
+                vec![
+                    "purple".into(),
+                    "blue".into(),
+                    "teal".into(),
+                    "amber".into(),
+                    "rose".into(),
+                ],
+            ),
+            (
+                "backgroundStyle",
+                vec!["graphite".into(), "midnight".into(), "warm-charcoal".into()],
+            ),
+        ] {
+            for value in values {
+                let mut json = serde_json::to_value(Config::default()).unwrap();
+                json[field] = value.clone();
+                let config: Config = serde_json::from_value(json).unwrap();
+                assert!(config.validate().is_ok());
+                assert_eq!(serde_json::to_value(config).unwrap()[field], value);
+            }
+        }
+    }
+    #[test]
+    fn invalid_appearance_is_rejected_on_save() {
+        for (field, value) in [
+            ("language", serde_json::json!("fr")),
+            ("fontScale", 135.into()),
+            ("accentColor", "red".into()),
+            ("backgroundStyle", "white".into()),
+        ] {
+            let mut json = serde_json::to_value(Config::default()).unwrap();
+            json[field] = value;
+            let config: Config = serde_json::from_value(json).unwrap();
+            assert_eq!(config.validate(), Err("INVALID_APPEARANCE_SETTINGS".into()));
+        }
+    }
     #[test]
     fn local_preferences_can_be_saved_before_model_configuration() {
         assert!(Config::default().validate().is_ok());

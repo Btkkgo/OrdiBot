@@ -24,9 +24,13 @@ Hidden、Edge、Chat、Agent 四态，左右停靠与垂直位置记忆，可关
 - **PASS：**89 个 TypeScript 测试、类型检查、前端及签名原生构建。已验证的运行时构建记录标识 `60f23d1`，重启该 release 后仍保留右侧停靠与垂直位置。原生适配器未变化。新 Windows 两次执行（[分支](https://github.com/Btkkgo/OrdiBot/actions/runs/38210164089)、[PR](https://github.com/Btkkgo/OrdiBot/actions/runs/38210230779)）均通过测试、类型检查及原生 NSIS 打包，新安装包已下载。此前实测 Rust 总数为 34；新执行原始日志因传输超时未取回。生产请求继续为 0。
 - **PASS：**用户完成系统认证后，仅移除旧 OrdiBot 录屏条目并登记确切的当前应用包，已复核当前 `60f23d1` release 截图。真实预览、取消不附加、确认生成截图附件及移除全部通过。截图未发给模型或公开记录，其他权限保留；未重新构建已验证的程序。
 
+## G6.1 外观与语言
+
+[Issue #20](https://github.com/Btkkgo/OrdiBot/issues/20)：活跃界面类型安全字典、14px 系统字体与五档字号、五种强调色/三种背景、即时外观预览/重置及兼容原生配置字段已 IMPLEMENTED。99 个 TypeScript / 37 个 Rust 测试、类型检查及前端构建 PASS。Mac 原生与新 Windows CI 验收待完成；无真实服务调用或新 Agent 功能，完整 V1 仍 NEEDS_VALIDATION.
+
 ## Partial / 部分验证
 
-macOS 被动感知取得真实应用名；实测窗口标题未取得，降级为仅应用元数据。提醒节流/过滤/去重及元数据附件边界有回归/源码覆盖；菜单栏入口及全局快捷键恢复为 **NOT VERIFIED**。CUA 合成快捷键尝试未展开 Chat，尚无确定原生原因；点击 Edge 恢复可用。Windows 界面/上下文验收为 **NOT RUN**。英文界面本地化待办。
+macOS 被动感知取得真实应用名；实测窗口标题未取得，降级为仅应用元数据。提醒节流/过滤/去重及元数据附件边界有回归/源码覆盖；菜单栏入口及全局快捷键恢复为 **NOT VERIFIED**。CUA 合成快捷键尝试未展开 Chat，尚无确定原生原因；点击 Edge 恢复可用。Windows 界面/上下文验收为 **NOT RUN**。G6.1 活跃界面本地化已实现，原生语言/外观验收进行中。
 
 ## Blocked / 暂缓
 

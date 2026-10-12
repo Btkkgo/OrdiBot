@@ -1,11 +1,13 @@
+import { useUi } from "./UiContext";
 /** Original OrdiBot "Orbit" character. Drawn for this app, no reference artwork reused. */
 export function Character({ headOnly = false }: { headOnly?: boolean }) {
+  const { t } = useUi();
   return (
     <svg
       className="orbit-character"
       viewBox={headOnly ? "8 0 50 51" : "0 0 64 76"}
       role="img"
-      aria-label="OrdiBot 原创小角色 Orbit"
+      aria-label={t("characterAlt")}
     >
       <ellipse cx="32" cy="70" rx="20" ry="3" fill="#000" opacity=".15" />
       <path

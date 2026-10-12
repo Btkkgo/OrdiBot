@@ -1,57 +1,221 @@
-import { useEffect, useState } from "react";
-import { Check, KeyRound, Pin, ShieldCheck } from "lucide-react";
+import { withAppearance, mergeSettingsSnapshot } from "./settingsDraft";
+import { useEffect, useState, useRef } from "react";
+import { Check, KeyRound, Pin, ShieldCheck, Palette } from "lucide-react";
 import type { Config, Snapshot } from "./types";
+import { displayError } from "./types";
+import { useUi } from "./UiContext";
+import {
+  accentColors,
+  backgroundStyles,
+  fontScales,
+  appearanceDefaults,
+  normalizeAppearance,
+  type Appearance,
+} from "./appearance";
+import type { TranslationKey } from "../i18n/companion";
+
 export function ModelSettings({
   snapshot,
   page,
   onSave,
+  onPreview,
+  appearance = snapshot.data.config,
 }: {
   snapshot: Snapshot;
   page: "models" | "settings";
   onSave: (config: Config, key: string, remoteKey: string) => Promise<void>;
+  onPreview?: (appearance: Appearance) => void;
+  appearance?: Appearance;
 }) {
-  const [config, setConfig] = useState(snapshot.data.config);
+  const { t, language } = useUi();
+  const [config, setConfig] = useState(
+    withAppearance(snapshot.data.config, appearance),
+  );
   const [key, setKey] = useState("");
   const [remoteKey, setRemoteKey] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  useEffect(() => setConfig(snapshot.data.config), [snapshot.data.config]);
+  const [saveError, setSaveError] = useState<unknown>(null);
+  const previousSnapshot = useRef(snapshot.data.config);
+  useEffect(() => {
+    const previous = previousSnapshot.current;
+    previousSnapshot.current = snapshot.data.config;
+    setConfig((draft) =>
+      mergeSettingsSnapshot(draft, previous, snapshot.data.config, appearance),
+    );
+  }, [snapshot.data.config]);
+  useEffect(
+    () => setConfig((current) => withAppearance(current, appearance)),
+    [
+      appearance.language,
+      appearance.fontScale,
+      appearance.accentColor,
+      appearance.backgroundStyle,
+    ],
+  );
+  const field = <K extends keyof Config>(name: K, value: Config[K]) => {
+    setSaved(false);
+    setSaveError(null);
+    setConfig((c) => ({ ...c, [name]: value }));
+  };
+  const appearanceField = <K extends keyof Appearance>(
+    name: K,
+    value: Appearance[K],
+  ) => {
+    const next = { ...config, [name]: value };
+    setSaved(false);
+    setSaveError(null);
+    setConfig(next);
+    onPreview?.(normalizeAppearance(next));
+  };
   const save = async () => {
     setSaving(true);
     setSaved(false);
+    setSaveError(null);
     try {
       await onSave(config, key, remoteKey);
       setKey("");
       setRemoteKey("");
       setSaved(true);
-    } catch {
+    } catch (e) {
+      setSaveError(e);
       setSaved(false);
     } finally {
       setSaving(false);
     }
   };
-  const field = (name: keyof Config, value: string | boolean | number) => {
-    setSaved(false);
-    setConfig((c) => ({ ...c, [name]: value }));
+  const scaleKeys: Record<number, TranslationKey> = {
+    90: "font.small",
+    100: "font.default",
+    110: "font.comfortable",
+    120: "font.large",
+    130: "font.extraLarge",
   };
   return (
     <div className="settings-view">
-      <div className="eyebrow">YOUR DESKTOP AI COMPANION</div>
-      <h1>{page === "models" ? "模型与服务" : "偏好设置"}</h1>
-      <p className="muted">配置保存在这台电脑，密钥交给系统安全存储。</p>
+      <div className="eyebrow">{t("settingsKicker")}</div>
+      <h1>{t(page === "models" ? "modelsTitle" : "settingsTitle")}</h1>
+      <p className="muted">{t("settingsIntro")}</p>
+      {page === "settings" && (
+        <section className="settings-section appearance-section">
+          <h2>
+            <Palette size={17} />
+            {t("appearanceTitle")}
+          </h2>
+          <label>
+            {t("language")}
+            <select
+              value={config.language}
+              disabled={saving}
+              onChange={(e) =>
+                appearanceField(
+                  "language",
+                  e.target.value as Appearance["language"],
+                )
+              }
+            >
+              <option value="zh-CN">{t("language.zh-CN")}</option>
+              <option value="en">{t("language.en")}</option>
+            </select>
+          </label>
+          <label>
+            {t("fontSize")}
+            <select
+              value={config.fontScale}
+              disabled={saving}
+              onChange={(e) =>
+                appearanceField(
+                  "fontScale",
+                  Number(e.target.value) as Appearance["fontScale"],
+                )
+              }
+            >
+              {fontScales.map((scale) => (
+                <option key={scale} value={scale}>
+                  {scale}% — {t(scaleKeys[scale])}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            {t("accentColor")}
+            <select
+              value={config.accentColor}
+              disabled={saving}
+              onChange={(e) =>
+                appearanceField(
+                  "accentColor",
+                  e.target.value as Appearance["accentColor"],
+                )
+              }
+            >
+              {accentColors.map((color) => (
+                <option key={color} value={color}>
+                  {t(`accent.${color}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            {t("backgroundStyle")}
+            <select
+              value={config.backgroundStyle}
+              disabled={saving}
+              onChange={(e) =>
+                appearanceField(
+                  "backgroundStyle",
+                  e.target.value as Appearance["backgroundStyle"],
+                )
+              }
+            >
+              {backgroundStyles.map((style) => (
+                <option key={style} value={style}>
+                  {t(`background.${style}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="appearance-preview" aria-label={t("preview")}>
+            <span className="eyebrow">
+              {t("preview")} · {config.fontScale}%
+            </span>
+            <h3>OrdiBot</h3>
+            <p>{t("previewText")}</p>
+            <span className="preview-message">{t("welcomeTitle")}</span>
+            <button type="button" className="primary" disabled>
+              {t("sendMessage")}
+            </button>
+          </div>
+          <button
+            className="outline"
+            disabled={saving}
+            onClick={() => {
+              const next = { ...config, ...appearanceDefaults };
+              setConfig(next);
+              setSaved(false);
+              setSaveError(null);
+              onPreview?.(normalizeAppearance(next));
+            }}
+          >
+            {t("resetDefaults")}
+          </button>
+          <p className="muted">{t("previewHint")}</p>
+        </section>
+      )}
       <section className="settings-section">
         <h2>
-          <KeyRound size={16} /> Chat · OpenAI-compatible API
+          <KeyRound size={16} />
+          {t("chatApi")}
         </h2>
         <label>
-          Provider
+          {t("provider")}
           <input
             value={config.provider}
             onChange={(e) => field("provider", e.target.value)}
           />
         </label>
         <label>
-          Base URL
+          {t("baseUrl")}
           <input
             value={config.baseUrl}
             spellCheck={false}
@@ -60,25 +224,28 @@ export function ModelSettings({
           />
         </label>
         <label>
-          Model ID
+          {t("modelId")}
           <input
             value={config.model}
             spellCheck={false}
             onChange={(e) => field("model", e.target.value)}
-            placeholder="填写服务提供的模型 ID"
+            placeholder={t("modelPlaceholder")}
           />
         </label>
         <label>
-          API Key{" "}
+          {t("apiKey")}{" "}
           <span className="muted">
-            {snapshot.keyPresent ? "已安全保存 · 留空保留" : "尚未配置"}
+            {t(snapshot.keyPresent ? "keyStored" : "notConfigured")}
           </span>
           <input
             type="password"
             autoComplete="off"
             value={key}
-            onChange={(e) => setKey(e.target.value)}
-            placeholder="仅在本地填写"
+            onChange={(e) => {
+              setSaved(false);
+              setKey(e.target.value);
+            }}
+            placeholder={t("localKey")}
           />
         </label>
         <label className="check-label">
@@ -86,11 +253,11 @@ export function ModelSettings({
             type="checkbox"
             checked={config.vision}
             onChange={(e) => field("vision", e.target.checked)}
-          />{" "}
-          模型支持视觉输入
+          />
+          {t("vision")}
         </label>
         <label>
-          Output Length
+          {t("outputLength")}
           <input
             type="number"
             min={256}
@@ -103,50 +270,52 @@ export function ModelSettings({
       </section>
       <section className="settings-section">
         <h2>
-          <ShieldCheck size={16} /> Remote · OpenAI hosted Agent
+          <ShieldCheck size={16} />
+          {t("remoteHosted")}
         </h2>
+        <p className="muted">{t("remoteInfo")}</p>
         <p className="muted">
-          独立云端浏览器服务，需要 Agents
-          权限及额度。不会使用你的本地电脑执行任务。
-        </p>
-        <p className="muted">
-          连接状态：
-          {snapshot.remoteKeyPresent
-            ? "密钥已配置 · 真实连接待验收"
-            : "尚未配置"}
+          {t("connectionStatus", {
+            status: t(
+              snapshot.remoteKeyPresent ? "keyUnverified" : "notConfigured",
+            ),
+          })}
         </p>
         <label>
-          Agent Model ID
+          {t("agentModelId")}
           <input
             value={config.remoteModel}
             onChange={(e) => field("remoteModel", e.target.value)}
           />
         </label>
         <label>
-          OpenAI Agents API Key{" "}
+          {t("remoteKey")}{" "}
           <span className="muted">
-            {snapshot.remoteKeyPresent ? "已安全保存 · 留空保留" : "尚未配置"}
+            {t(snapshot.remoteKeyPresent ? "keyStored" : "notConfigured")}
           </span>
           <input
             type="password"
             autoComplete="off"
             value={remoteKey}
-            onChange={(e) => setRemoteKey(e.target.value)}
-            placeholder="需要 api.agents.read/write 与 api.responses.write"
+            onChange={(e) => {
+              setSaved(false);
+              setRemoteKey(e.target.value);
+            }}
+            placeholder={t("remoteKeyHelp")}
           />
         </label>
       </section>
       <section className="settings-section">
-        <h2>回答与窗口</h2>
+        <h2>{t("answerWindow")}</h2>
         <label>
-          回答风格
+          {t("answerStyle")}
           <select
             value={config.style}
-            onChange={(e) => field("style", e.target.value)}
+            onChange={(e) => field("style", e.target.value as Config["style"])}
           >
-            <option value="concise">Concise · 简洁（默认）</option>
-            <option value="normal">Normal · 普通</option>
-            <option value="detailed">Detailed · 详细</option>
+            <option value="concise">{t("style.concise")}</option>
+            <option value="normal">{t("style.normal")}</option>
+            <option value="detailed">{t("style.detailed")}</option>
           </select>
         </label>
         <label className="check-label">
@@ -155,7 +324,8 @@ export function ModelSettings({
             checked={config.alwaysOnTop}
             onChange={(e) => field("alwaysOnTop", e.target.checked)}
           />
-          <Pin size={14} /> 窗口置顶
+          <Pin size={14} />
+          {t("alwaysOnTop")}
         </label>
         <label className="check-label">
           <input
@@ -163,7 +333,7 @@ export function ModelSettings({
             checked={config.contextReminders}
             onChange={(e) => field("contextReminders", e.target.checked)}
           />
-          上下文轻提醒（仅应用名与窗口标题）
+          {t("contextReminders")}
         </label>
         <label className="check-label">
           <input
@@ -171,20 +341,24 @@ export function ModelSettings({
             checked={config.browsersEditorsOnly}
             onChange={(e) => field("browsersEditorsOnly", e.target.checked)}
           />
-          仅提醒浏览器与编辑器
+          {t("browsersEditorsOnly")}
         </label>
         <label>
-          边缘宠物位置
+          {t("petPosition")}
           <select
             value={config.edgeSide}
-            onChange={(e) => field("edgeSide", e.target.value)}
+            onChange={(e) =>
+              field("edgeSide", e.target.value as Config["edgeSide"])
+            }
           >
-            <option value="left">桌面左侧</option>
-            <option value="right">桌面右侧</option>
+            <option value="left">{t("leftEdge")}</option>
+            <option value="right">{t("rightEdge")}</option>
           </select>
         </label>
         <label>
-          垂直位置 · {Math.round(config.edgeVertical * 100)}%
+          {t("verticalPosition", {
+            count: Math.round(config.edgeVertical * 100),
+          })}
           <input
             type="range"
             min="0"
@@ -195,35 +369,38 @@ export function ModelSettings({
             }
           />
         </label>
+        <p className="muted">{t("reminderPrivacy")}</p>
         <p className="muted">
-          提醒最多每 20
-          秒一次。点击仅附加应用/标题，不自动读取正文、剪贴板或截图。
-        </p>
-        <p className="muted">
-          {snapshot.shortcutAvailable
-            ? "⌘ / Ctrl + Shift + Space 重新打开窗口。"
-            : "快捷键未注册成功，请使用菜单栏恢复。"}{" "}
-          菜单栏也可以恢复或退出应用。
+          {t(
+            snapshot.shortcutAvailable
+              ? "shortcutAvailable"
+              : "shortcutUnavailable",
+          )}{" "}
+          {t("trayHelp")}
         </p>
       </section>
-      <button
-        className="primary save-button"
-        disabled={saving}
-        onClick={() => void save()}
-      >
-        {saved ? (
-          <>
-            <Check size={15} /> 已保存
-          </>
-        ) : saving ? (
-          "正在保存…"
-        ) : (
-          "保存设置"
+      <div className="settings-save-bar">
+        {saveError != null && (
+          <p role="alert" className="task-error">
+            {displayError(saveError, language)}
+          </p>
         )}
-      </button>
-      <p className="privacy-note">
-        轻提醒只检测应用与标题。正文、剪贴板和截图需主动附加；截图像素不保存到历史文件。
-      </p>
+        <button
+          className="primary save-button"
+          disabled={saving}
+          onClick={() => void save()}
+        >
+          {saved ? (
+            <>
+              <Check size={15} />
+              {t("saved")}
+            </>
+          ) : (
+            t(saving ? "saving" : "saveSettings")
+          )}
+        </button>
+      </div>
+      <p className="privacy-note">{t("privacyNote")}</p>
     </div>
   );
 }

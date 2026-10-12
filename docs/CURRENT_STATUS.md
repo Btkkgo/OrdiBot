@@ -24,9 +24,13 @@ Four surfaces (Hidden, Edge, Chat, Agent), left/right docking and remembered ver
 - **PASS:** 89 TypeScript tests, typecheck, frontend and signed native builds. The verified runtime receipt identifies `60f23d1`; restarting that exact release preserved the right edge and vertical position. Native adapters are unchanged. Both fresh Windows runs ([branch](https://github.com/Btkkgo/OrdiBot/actions/runs/38210164089), [PR](https://github.com/Btkkgo/OrdiBot/actions/runs/38210230779)) passed tests, typecheck and native NSIS packaging; the new installer was downloaded. The previously observed Rust total is 34; raw logs for the new run could not be retrieved because of a transport timeout. Production requests remain 0.
 - **PASS:** current `60f23d1` release screen capture was revalidated after owner OS authentication, removal of only the old OrdiBot recording entry and registration of the exact current bundle. Real preview, cancel without attachment, confirmed screenshot attachment and removal all passed. No screenshot was sent to a model or public record; unrelated permissions were preserved. The verified executable was not rebuilt.
 
+## G6.1 appearance and language
+
+[Issue #20](https://github.com/Btkkgo/OrdiBot/issues/20): typed active-UI dictionaries, 14px system typography with five scales, five accents/three backgrounds, live appearance preview/reset and compatible native fields are IMPLEMENTED. 99 TypeScript / 37 Rust tests, typecheck and frontend build PASS. Native Mac and fresh Windows CI acceptance are pending. No live provider call or new Agent capability. Full V1 remains NEEDS_VALIDATION.
+
 ## Partial
 
-macOS passive awareness obtained real app names; window titles were unavailable in observed runs and degrade to app-only metadata. Reminder throttle/filter/dedup and metadata attachment boundaries have regression/source coverage; tray menu and global shortcut restoration are **NOT VERIFIED**. CUA synthetic shortcut attempts did not reopen Chat; no specific native cause was established, and Edge-click restore works. Windows GUI/context acceptance is **NOT RUN**. English UI localization is deferred.
+macOS passive awareness obtained real app names; window titles were unavailable in observed runs and degrade to app-only metadata. Reminder throttle/filter/dedup and metadata attachment boundaries have regression/source coverage; tray menu and global shortcut restoration are **NOT VERIFIED**. CUA synthetic shortcut attempts did not reopen Chat; no specific native cause was established, and Edge-click restore works. Windows GUI/context acceptance is **NOT RUN**. G6.1 active-UI localization is implemented; native language/appearance acceptance is being exercised.
 
 ## Blocked
 

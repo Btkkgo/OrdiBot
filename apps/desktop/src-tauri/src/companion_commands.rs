@@ -5,7 +5,7 @@ use model_gateway::{
 };
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use tauri::{Manager, State};
+use tauri::{Emitter, Manager, State};
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -58,7 +58,10 @@ pub fn save_companion_config(
         w.set_always_on_top(stored.config.always_on_top)
             .map_err(|_| "WINDOW_UNAVAILABLE")?
     }
+    let config = stored.config.clone();
     drop(stored);
+    let _ = app.emit("ordibot:config", &config);
+    super::companion_menu::preview_ui_language(app.clone(), config.language)?;
     super::companion_presence::refresh_preferences(&app);
     Ok(())
 }
