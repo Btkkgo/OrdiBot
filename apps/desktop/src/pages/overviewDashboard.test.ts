@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { AppSnapshotDto, ConnectorDto, EvidenceDto, SignalDto } from "@ordinconn/contracts";
+import type { AppSnapshotDto, ConnectorDto, EvidenceDto, SignalDto } from "@ordibot/contracts";
 import {
   buildOverviewDashboard,
   filterSignals,

@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import type { IntelligenceItemDto, MobileActionResultDto, MobileGoalDto, MobileWorkspaceDto } from "@ordinconn/contracts";
+import type { IntelligenceItemDto, MobileActionResultDto, MobileGoalDto, MobileWorkspaceDto } from "@ordibot/contracts";
 import { buildWorkbenchModel, selectMetric, type AgentPlan, type PlanStatus } from "./model";
 import { createVisualFixture, visualFixtureEnabled } from "./visualFixture";
 import { WorkbenchCommandRunner, type WorkbenchRuntimePort } from "./commands";
@@ -9,7 +9,7 @@ import { submitCommandDraft } from "./AgentCommandPanel";
 import { MobileHomePage } from "../pages/MobileHomePage";
 import { createTranslator } from "../i18n";
 import { frameSurfaceStyle } from "../components/MobileDeviceView";
-import type { MobileFrameDto } from "@ordinconn/contracts";
+import type { MobileFrameDto } from "@ordibot/contracts";
 
 const now = new Date("2026-09-27T12:00:00+08:00");
 const empty: MobileWorkspaceDto = {

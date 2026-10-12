@@ -8,7 +8,7 @@ import {
   Landmark,
   ShieldCheck,
 } from "lucide-react";
-import type { AppSnapshotDto, SignalDto } from "@ordinconn/contracts";
+import type { AppSnapshotDto, SignalDto } from "@ordibot/contracts";
 import type { Translator } from "../i18n";
 import { buildOverviewDashboard, type OverviewTarget } from "./overviewDashboard";
 

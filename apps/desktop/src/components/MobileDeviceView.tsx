@@ -1,4 +1,4 @@
-import type { MobileActionInputDto, MobileActionReceiptDto, MobileDeviceSessionDto, MobileFrameDto, MobileUiSnapshotDto } from "@ordinconn/contracts";
+import type { MobileActionInputDto, MobileActionReceiptDto, MobileDeviceSessionDto, MobileFrameDto, MobileUiSnapshotDto } from "@ordibot/contracts";
 import { Crosshair, Smartphone } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import type { Translator } from "../i18n";

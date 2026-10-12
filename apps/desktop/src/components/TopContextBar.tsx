@@ -1,5 +1,5 @@
 import { ChevronDown, Database, ShieldCheck } from "lucide-react";
-import type { SignalDto } from "@ordinconn/contracts";
+import type { SignalDto } from "@ordibot/contracts";
 import type { Translator } from "../i18n";
 import type { PageId } from "./Navigation";
 

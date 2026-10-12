@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import type { IntelligenceItemDto } from "@ordinconn/contracts";
+import type { IntelligenceItemDto } from "@ordibot/contracts";
 import type { Translator } from "../i18n";
 export function WorkbenchDataBrowser({ items, onSelect, onClose, t }: { items: IntelligenceItemDto[]; onSelect: (item: IntelligenceItemDto) => void; onClose: () => void; t: Translator }) {
   useEffect(() => { const close = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); }; window.addEventListener("keydown", close); return () => window.removeEventListener("keydown", close); }, [onClose]);

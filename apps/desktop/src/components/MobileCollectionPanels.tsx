@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import type { MobileCollectionWorkspace, MobileDataObject, MobileDataProvenance } from "@ordinconn/contracts";
+import type { MobileCollectionWorkspace, MobileDataObject, MobileDataProvenance } from "@ordibot/contracts";
 import type { Translator } from "../i18n";
 export interface CollectionPanelsProps {collection:MobileCollectionWorkspace;t:Translator;onExtract:()=>Promise<void>;onProvenance:(id:string)=>Promise<MobileDataProvenance>;connected:boolean}
 export function filterMobileData(objects:MobileDataObject[],filter:string):MobileDataObject[]{return objects.filter(o=>filter==="all"||filter==="realtime"||o.objectType===filter);}

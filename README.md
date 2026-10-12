@@ -1,144 +1,42 @@
-# OrdinConn
+# OrdiBot
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-> Current M3: saved Google Gemini / `gemini-3.6-flash`, Provider Count **1**. The new paced Planner-only batch passed **1/5** (3 calls executed, 2 not run; 10 attempts, 6 HTTP 429, 2 HTTP 503, 1 HTTP 200 and 1 deadline-interrupted attempt). Bounded retry regression PASS; real acceptance stopped as **FREE_TIER_RATE_LIMIT_BLOCKED**; Full Autonomous M3 remains **NOT_COMPLETE**. Earlier Phase 2–5 counts below are historical. Deployment is **PERSONAL / LOCAL-ONLY APPLICATION**; Apple signing/distribution is **OUT_OF_SCOPE_LOCAL_ONLY**.
+**Your Desktop AI Companion** — a compact desktop context assistant and an expandable workspace for hosted computer Agents. This is the original OrdinConn repository, renamed without replacing its Git history.
 
+OrdiBot uses Tauri v2, Rust, React and TypeScript. The dark floating Chat window has a narrow navigation rail, a small original 2D character, and one runtime shared with the larger Agent workspace. Financial dashboards, collectors, trading and Android automation are retired from the active desktop application; their historical assets remain recoverable.
 
-[GitHub Repository](https://github.com/Btkkgo/OrdinConn) · [Current Mobile Gate](https://github.com/Btkkgo/OrdinConn/issues/1)
+- **Chat:** owner-configured OpenAI-compatible endpoint through Model Gateway; multi-turn text, streaming, cancellation, bounded responses and explicit errors. No credential-free demo answers.
+- **Context:** attach copied text on demand, actively acquire foreground app/window metadata, or capture and confirm a screenshot. No background screen, keyboard or clipboard monitoring. Vision must be enabled for screenshot requests.
+- **Agent:** an OpenAI hosted Agents API adapter with provider-driven task history, records, results, origin approvals and cancellation. Meta Muse and Grok Bot are clearly marked external entries, with no verified native task API integration.
+- **Local controls:** floating window, pin preference, mode/geometry restore, tray/menu entry and Command/Ctrl + Shift + Space when registration succeeds.
 
-**Open-source, model-agnostic AI Agent runtime for personal use on the owner’s Mac.**
+The current interface is Simplified Chinese. English UI localization is deferred. The owner has deferred production API acceptance until credentials are configured locally. Adapter implementation and local tests do **not** establish live service availability. macOS is the first local delivery target; Windows requires independent native build and interactive acceptance. See [current status](docs/CURRENT_STATUS.md).
 
-OrdinConn aims to provide AI models with a runtime layer for perceiving, understanding, and operating computers and mobile environments. Its current V0.1 application applies that runtime to evidence-backed financial intelligence across traditional finance and crypto.
+## Run locally
 
-OrdinConn is not another chatbot. It is the auditable layer between model reasoning and real tools.
+Requirements: Node.js 22+, Rust stable, and the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for the target platform. macOS requires Xcode command line tools; Windows requires MSVC and WebView2.
 
-```text
-AI Model
-   ↓
-Reasoning
-   ↓
-OrdinConn Runtime
-   ↓
-Perception
-   ↓
-Tools / Applications
-   ↓
-Action
-   ↓
-Verification
+```sh
+npm ci
+npm run desktop:dev
 ```
 
-## Why OrdinConn
+Open **Models**, configure Provider, Base URL, Model ID and vision support, and enter the key locally. Keys use the operating system credential store and are never saved in React storage or the JSON history file. Ordinary responses default to Concise; Normal and Detailed are selectable. Remote Agents use a separate OpenAI key and require compatible account permissions and quota.
 
-Models can change. Tooling, permissions, provenance, and verification still need stable contracts. OrdinConn separates those concerns so an agent can observe real state, act within explicit authority, verify the result, and preserve an audit trail.
-
-## Architecture
-
-The Rust core is transport-agnostic. React communicates with the Tauri host through typed IPC. Models enter through Model Gateway, and data sources enter through Connector Registry.
-
-The current financial intelligence loop is:
-
-```text
-Data → Evidence → Signal → Agent Report → Trade Proposal → Approval → Paper Execution
-```
-
-See the [architecture overview](docs/architecture/OVERVIEW.md) ([中文](docs/architecture/OVERVIEW.zh-CN.md)) and [product baseline](docs/PRODUCT_BASELINE.md).
-
-## Current Status
-
-- Version: `0.1.0`
-- Mobile stage: M1.5 real-environment validation complete
-- M1.5 gate: **PASS**
-- Mandatory acceptance: **15 PASS / 0 FAIL / 0 BLOCKED / 0 NOT RUN**
-- M2: **VERIFIED — 30 PASS / 0 FAIL / 0 BLOCKED / 0 NOT RUN** ([Issue #7](https://github.com/Btkkgo/OrdinConn/issues/7); [acceptance](docs/mobile/M2_ACCEPTANCE.md))
-- Real-money execution: not implemented; V0.1 is paper-only
-
-The real Android gate passed against an Android 16 ARM64 Emulator: environment readiness, frame capture, UI tree, snapshot parse, element references, `MobileObservation`, workspace projection, and session shutdown. A separate packaged-desktop smoke exercised the real Rust → Tauri command/event → React path for status, allowlist error, session start, observation, and stop. A real password-node test also verified that sensitive content does not enter the serialized capture. See [Current Status](docs/CURRENT_STATUS.md) for the evidence boundary.
-
-## Mobile Intelligence
-
-Implemented M0/M1 foundations include device-session contracts, bounded screen frames, semantic UI snapshots, scoped element references, sensitive-node redaction policy, typed IPC projection, persistence, and `MobileObservation`.
-
-Real frame capture, UI-tree capture, redaction verification, observation generation, typed IPC, and shutdown are verified against the dedicated `OrdinConn_M1_5` AVD. M2 has also passed its 30-item gate: bounded real Settings navigation, negative safety checks, sanitized receipts/audit, packaged GUI manual Tap, and M1.5 regression. Production M2 actions are limited to Settings/Settings Intelligence even if another app is user-allowlisted. M3 Phase 2/3 foundations and the Phase 4 single-step executor are locally implemented; full autonomous acceptance is NOT_COMPLETE (Provider 0, Phase 5 implementation ready for validation); see [M3 Executor](docs/mobile/M3_EXECUTOR.md); no X draft or post was created for M2.
-
-## Computer Runtime
-
-OrdinConn defines bounded computer-perception and action interfaces, permission gates, audit events, and post-action verification. Continuous screen recording and unrestricted automation are not the design. The current Computer Runtime is partial; see the [roadmap](docs/roadmap/README.md).
-
-## Model Independence
-
-Every model adapter is routed through Model Gateway. The repository currently includes an OpenAI-compatible adapter and a deterministic mock adapter. Model output remains inference; it never becomes Evidence merely because a model produced it.
-
-## Safety and Permissions
-
-- No private keys, recovery phrases, or password-field contents are collected.
-- User-funds operations require explicit approval; V0.1 has no real-money execution.
-- Trade Proposals require exact, time-bounded approval capabilities before any adapter.
-- Mobile access is application-allowlisted and sensitive UI nodes are redacted.
-- Public synchronization fails closed on suspected secrets, private paths, or prohibited files.
-
-Read [Safety and Approval](docs/SAFETY_AND_APPROVAL.md), [Mobile Security](docs/mobile/MOBILE_SECURITY.md), and [Security Policy](SECURITY.md) ([中文](SECURITY.zh-CN.md)).
-
-## Development Status
-
-```bash
-npm install
+```sh
 npm test
 npm run typecheck
-npm run build
-cargo test --workspace
-cargo clippy --workspace --all-targets --all-features -- -D warnings
-```
-
-The Tauri bundle is built with:
-
-```bash
+cargo test --locked
 npm run desktop:build
 ```
 
-Environment-dependent checks are reported separately from fixture coverage.
+The supported build wrapper creates a local macOS ad-hoc signed `OrdiBot.app` and records source/executable fingerprints. No Apple Developer account, notarization or commercial signing is required. On Windows it builds an NSIS installer. [Build details](docs/MACOS_BUILD.md).
 
-## Build in Public
+The new `ai.ordibot.desktop` data/credential namespaces are separate from the preserved `ai.ordinconn.desktop` legacy store. Old financial history and provider keys are not automatically imported. Screenshot pixels are transient; copied text deliberately sent in Chat is part of the local conversation history. [Migration audit](docs/ordibot/MIGRATION.md).
 
-GitHub is OrdinConn's public engineering source of truth. Issues define meaningful work; DevLogs record decisions, failures, verification, and remaining risk. X drafts are manually curated from verified GitHub records and are never published automatically.
+## Project records
 
-- [Development log](docs/devlog/2026-09-20.md) · [中文](docs/devlog/2026-09-20.zh-CN.md)
-- [Problems and Solutions](docs/PROBLEMS_AND_SOLUTIONS.md) · [中文](docs/PROBLEMS_AND_SOLUTIONS.zh-CN.md)
-- [Codex Field Notes](docs/codex/CODEX_FIELD_NOTES.md) · [中文](docs/codex/CODEX_FIELD_NOTES.zh-CN.md)
-- [Build in Public policy](docs/open-source/BUILD_IN_PUBLIC.md) · [中文](docs/open-source/BUILD_IN_PUBLIC.zh-CN.md)
+[Product baseline](docs/PRODUCT_BASELINE.md) · [Architecture](docs/ARCHITECTURE.md) · [Roadmap](docs/open-source/ROADMAP.md) · [Provider verification](docs/ordibot/PROVIDERS.md) · [Security](docs/open-source/SECURITY_AND_PRIVACY.md) · [Build in Public](docs/open-source/BUILD_IN_PUBLIC.md) · [Issue #17](https://github.com/Btkkgo/OrdiBot/issues/17)
 
-## Documentation
-
-- [Current Status](docs/CURRENT_STATUS.md) · [中文](docs/CURRENT_STATUS.zh-CN.md)
-- [Architecture](docs/architecture/OVERVIEW.md) · [中文](docs/architecture/OVERVIEW.zh-CN.md)
-- [Mobile Intelligence](docs/mobile/MOBILE_INTELLIGENCE.md)
-- [Model Gateway](docs/MODEL_GATEWAY.md)
-- [Connector and Source Registry](docs/SOURCE_REGISTRY.md)
-- [Architecture Decisions](docs/decisions/) · [中文](docs/decisions/README.zh-CN.md)
-- [Security and Privacy](docs/open-source/SECURITY_AND_PRIVACY.md) · [中文](docs/open-source/SECURITY_AND_PRIVACY.zh-CN.md)
-
-## Roadmap
-
-The roadmap advances only on verified gates. M1.5 and M2 passed their real-emulator gates. Production App Skills in M3, Evidence promotion in M4, and physical Android devices in M5 remain out of scope. See the [public roadmap](docs/roadmap/README.md) ([中文](docs/roadmap/README.zh-CN.md)).
-
-## Contributing
-
-Development is issue-first. Open or join a scoped issue before significant work, preserve the Evidence/inference boundary, and include relevant validation. See [CONTRIBUTING.md](CONTRIBUTING.md) ([中文](CONTRIBUTING.zh-CN.md)).
-
-## Known Limitations
-
-- Mobile navigation is bounded to Settings/Settings Intelligence. Live M3 Planner + Executor acceptance is BLOCKED_MODEL_NOT_CONFIGURED.
-- Computer Runtime support is partial and permission-bounded.
-- The current financial execution adapter is paper-only.
-- Historical process-fixture concurrency failures remain in the DevLog. Phase 5 isolates lifecycle resources and passes 20/20 repeated invocations; see the [current verification record](docs/mobile/M3_PHASE5.md).
-
-## License
-
-OrdinConn is licensed under the [MIT License](LICENSE).
-
-## Mobile Interaction and Data Acquisition — 2026-10-02
-
-[Issue #14](https://github.com/Btkkgo/OrdinConn/issues/14) adds a manual, local-only `Observe → Interact → Observe → Diff → Extract → Data Object → Data Stream → Provenance` loop on the existing Android Runtime and SQLite database. The lifecycle is `Source → Observation → Extraction → Data Object → Insight → Plan → Action → Result`; this stage implements through **Data Object**, with Insight/Plan reserved as interfaces. Home uses actual collected objects, an element inspector/manual controls and deterministic Observation Context. Sensitive values are redacted before persistence; deterministic deduplication retains repeated sightings and original evidence. Automated fixtures are verified separately from **REAL MOBILE DATA ACQUISITION ACCEPTANCE = PASS** (2026-10-02; H1–H2 human-operated, H3–H7 Codex-operated under explicit authorization). Production actions retain the existing emulator/Settings safety surface.
-
-**Historical initial implementation record:** M3 status/history, providers, retry/backoff/deadline, Keychain and the retained app are preserved. Automated real Android actions **0**; manual Android actions by Codex **0**; real Provider requests **0**; signing verification **0**; X Draft **NONE**. Rust/frontend compilation is allowed; macOS acceptance packaging is **NOT RUN / BLOCKED BY THE NO-SIGNING BOUNDARY** because the supported wrapper invokes `codesign`. See [implementation and owner acceptance](docs/mobile/MOBILE_DATA_ACQUISITION.md).
+Historical OrdinConn documentation is preserved under `docs/legacy/ordinconn-20261012/` and Git history. It does not describe the active OrdiBot product.

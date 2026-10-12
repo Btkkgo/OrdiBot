@@ -1,3 +1,3 @@
 fn main() {
-    ordinconn_desktop::run();
+    ordibot_desktop::run();
 }

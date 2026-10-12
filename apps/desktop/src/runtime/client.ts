@@ -1,4 +1,4 @@
-import type { MobileInteractionResponse, MobileActionType, MobileDataProvenance } from "@ordinconn/contracts";
+import type { MobileInteractionResponse, MobileActionType, MobileDataProvenance } from "@ordibot/contracts";
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import type {
@@ -23,8 +23,8 @@ import type {
   RuntimeEventEnvelope,
   TradeProposalDto,
   WarehouseEntryDto,
-} from "@ordinconn/contracts";
-import { parseRuntimeEventEnvelope } from "@ordinconn/contracts";
+} from "@ordibot/contracts";
+import { parseRuntimeEventEnvelope } from "@ordibot/contracts";
 import type { PageContext } from "./state";
 
 export interface AgentTaskStarted {
@@ -56,7 +56,7 @@ export const runtimeClient = {
   createMobileGoal: (input: CreateMobileGoalInputDto) => invoke<MobileGoalDto>("create_mobile_goal", { input }),
   getMobileGoal: (goalId: string) => invoke<MobileGoalDto>("get_mobile_goal", { goalId }),
   listMobileGoals: () => invoke<MobileGoalDto[]>("list_mobile_goals"),
-  executeMobileGoalStep: (goalId: string) => invoke<import("@ordinconn/contracts").MobileStepExecutionOutcomeDto>("execute_mobile_goal_step", { input: { goalId } }),
+  executeMobileGoalStep: (goalId: string) => invoke<import("@ordibot/contracts").MobileStepExecutionOutcomeDto>("execute_mobile_goal_step", { input: { goalId } }),
   planMobileGoal: (input: PlanMobileGoalInputDto) => invoke<MobilePlannerOutcomeDto>("plan_mobile_goal", { input }),
   getMobileGoalPlan: (goalId: string) => invoke<MobileGoalPlanDto | null>("get_mobile_goal_plan", { goalId }),
   getSnapshot: () => invoke<AppSnapshotDto>("get_snapshot"),

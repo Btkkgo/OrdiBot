@@ -61,7 +61,7 @@ is_official_remote() {
     return
   fi
   case "$candidate" in
-    git@github.com:Btkkgo/OrdinConn.git|https://github.com/Btkkgo/OrdinConn|https://github.com/Btkkgo/OrdinConn.git) return 0 ;;
+    git@github.com:Btkkgo/OrdiBot.git|https://github.com/Btkkgo/OrdiBot|https://github.com/Btkkgo/OrdiBot.git|git@github.com:Btkkgo/OrdinConn.git|https://github.com/Btkkgo/OrdinConn|https://github.com/Btkkgo/OrdinConn.git) return 0 ;;
     *) return 1 ;;
   esac
 }

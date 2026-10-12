@@ -1,6 +1,6 @@
 import { KeyRound, ServerCog, TestTube2 } from "lucide-react";
 import { useState, type FormEvent } from "react";
-import type { ModelProviderDto, ProviderCapabilitiesDto } from "@ordinconn/contracts";
+import type { ModelProviderDto, ProviderCapabilitiesDto } from "@ordibot/contracts";
 import { Alert, EmptyState, SectionHeader, StatusBadge } from "../components/WorkspaceUI";
 import type { Translator } from "../i18n";
 import type { ConnectionTestResult, ProviderInput } from "../runtime/client";

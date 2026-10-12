@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import type { AgentMessageDto, IntelligenceItemDto, SignalDto } from "@ordinconn/contracts";
+import type { AgentMessageDto, IntelligenceItemDto, SignalDto } from "@ordibot/contracts";
 import type { Translator } from "../i18n";
 import { sourceLabel } from "../pages/mobileIntelligence";
 

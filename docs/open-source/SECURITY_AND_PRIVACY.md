@@ -24,7 +24,7 @@ The scanner reports the file and detector category, not the suspected value. Red
 
 ## Product safety boundaries
 
-OrdinConn does not collect private keys, recovery phrases, or password-field contents. Real-money actions require explicit approval and are not implemented in V0.1. Mobile collection is application-allowlisted, sensitive UI nodes are redacted, and a `MobileObservation` cannot directly publish a Signal.
+OrdiBot reads copied text, foreground metadata and screenshots only after explicit actions. Screenshots require confirmation and pixels are excluded from persisted history. User-configured keys use system credential storage; attached text is untrusted context. No local autonomous computer engine or financial execution starts. Hosted tasks are public/read-only; unsupported sign-in/tool approvals remain blocked.
 
 ## Incident response
 

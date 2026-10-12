@@ -1,4 +1,4 @@
-import type { AgentMessageDto, IntelligenceItemDto, MobileWorkspaceDto, RuntimeEventEnvelope, SignalDto } from "@ordinconn/contracts";
+import type { AgentMessageDto, IntelligenceItemDto, MobileWorkspaceDto, RuntimeEventEnvelope, SignalDto } from "@ordibot/contracts";
 
 export interface PageContext {
   page: string;

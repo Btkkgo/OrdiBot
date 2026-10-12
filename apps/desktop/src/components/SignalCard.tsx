@@ -1,5 +1,5 @@
 import { ArrowDownRight, ArrowUpRight, Eye, Minus } from "lucide-react";
-import type { SignalDto } from "@ordinconn/contracts";
+import type { SignalDto } from "@ordibot/contracts";
 import type { Translator } from "../i18n";
 
 interface SignalCardProps { signal: SignalDto; onOpen: (signal: SignalDto) => void; t: Translator }

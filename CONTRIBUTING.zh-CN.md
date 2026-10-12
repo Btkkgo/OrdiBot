@@ -1,4 +1,4 @@
-# 为 OrdinConn 贡献
+# 为 OrdiBot 贡献
 
 [English](CONTRIBUTING.md) | [简体中文](CONTRIBUTING.zh-CN.md)
 

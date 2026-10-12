@@ -1,5 +1,5 @@
 import { Bot, Braces, CircleDot, Network } from "lucide-react";
-import type { AgentMessageDto } from "@ordinconn/contracts";
+import type { AgentMessageDto } from "@ordibot/contracts";
 import type { Translator } from "../i18n";
 
 const eventKeys = ["agent", "model", "signal", "approval", "execution", "system"] as const;

@@ -3,7 +3,7 @@ import { AppShell } from "../components/AppShell";
 import { MobileHomePage } from "../pages/MobileHomePage";
 import { createTranslator } from "../i18n";
 import { type WorkbenchViewModel } from "./model";
-import type { MobileWorkspaceDto } from "@ordinconn/contracts";
+import type { MobileWorkspaceDto } from "@ordibot/contracts";
 
 // Explicit development-only entry point, dynamically imported behind import.meta.env.DEV.
 // This module never invokes IPC or writes any production objects.

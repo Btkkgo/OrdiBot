@@ -2,7 +2,7 @@ import type {
   AppSnapshotDto,
   SignalCategory,
   SignalDto,
-} from "@ordinconn/contracts";
+} from "@ordibot/contracts";
 type LegacyWorkspacePage = "traditional" | "crypto" | "signals" | "agent" | "dataSources" | "approvals";
 
 const dashboardCategories: SignalCategory[] = [

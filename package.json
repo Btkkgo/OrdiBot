@@ -1,5 +1,5 @@
 {
-  "name": "ordinconn",
+  "name": "ordibot",
   "private": true,
   "version": "0.1.0",
   "workspaces": [
@@ -7,10 +7,10 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspace @ordinconn/desktop",
-    "dev": "npm run dev --workspace @ordinconn/desktop",
-    "desktop:dev": "npm run tauri:dev --workspace @ordinconn/desktop",
-    "desktop:build": "npm run tauri:build --workspace @ordinconn/desktop",
+    "build": "npm run build --workspace @ordibot/desktop",
+    "dev": "npm run dev --workspace @ordibot/desktop",
+    "desktop:dev": "npm run tauri:dev --workspace @ordibot/desktop",
+    "desktop:build": "node scripts/desktop/build.mjs",
     "test": "npm test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },

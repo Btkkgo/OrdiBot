@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { MobileDeviceSessionDto, MobileUiSnapshotDto } from "@ordinconn/contracts";
+import type { MobileDeviceSessionDto, MobileUiSnapshotDto } from "@ordibot/contracts";
 import { mobileActionAvailability } from "./MobileActionControls";
 
 const now = Date.parse("2026-09-22T06:00:00.000Z");

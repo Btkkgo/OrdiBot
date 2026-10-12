@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { IntelligenceItemDto, SignalDto, WarehouseEntryDto } from "@ordinconn/contracts";
+import type { IntelligenceItemDto, SignalDto, WarehouseEntryDto } from "@ordibot/contracts";
 import {
   filterWarehouseItems,
   matchRelatedSignals,

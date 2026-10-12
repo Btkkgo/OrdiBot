@@ -1,4 +1,4 @@
-import type { MobileActionInputDto, MobileActionResultDto, MobileGoalDto, MobileWorkspaceDto } from "@ordinconn/contracts";
+import type { MobileActionInputDto, MobileActionResultDto, MobileGoalDto, MobileWorkspaceDto } from "@ordibot/contracts";
 import { mobileActionAvailability } from "../components/MobileActionControls";
 import { toDataObjects } from "./model";
 import type { WorkbenchCommand } from "./AgentCommandPanel";

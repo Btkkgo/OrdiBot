@@ -4,6 +4,13 @@
 
 All notable public changes to OrdinConn will be recorded here from the open-source initialization forward. Earlier development history remains available in Git, but no unreconstructed release history is claimed.
 
+## OrdiBot V1 transition — 2026-10-12
+
+- Replaced the active financial/mobile desktop with a compact context Chat and expanded hosted-Agent workspace, including an original small 2D character.
+- Preserved repository history, private legacy data and unrelated assets; new storage and credential namespaces are explicit.
+- Added on-demand clipboard/foreground/screenshot acquisition, configurable concise model requests and provider-driven remote task records. Live API acceptance is owner-deferred; Windows interaction remains unverified.
+- Historical changes below describe OrdinConn, not the active OrdiBot MVP.
+
 ## Unreleased
 
 ### Added

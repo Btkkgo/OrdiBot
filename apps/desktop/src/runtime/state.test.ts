@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { IntelligenceItemDto, SignalDto } from "@ordinconn/contracts";
+import type { IntelligenceItemDto, SignalDto } from "@ordibot/contracts";
 import { createPageContext, initialRuntimeState, reduceMobileWorkspaceEvent, reduceRuntimeEvent } from "./state";
 
 const signal = {
@@ -45,7 +45,7 @@ describe("runtime UI state", () => {
   });
 
   it("merges a mobile event without replacing feed or settings", () => {
-    const workspace = { runtimeStatus: "disconnected", feed: [{ id: "item-1" }], settings: { textScale: 100 } } as unknown as import("@ordinconn/contracts").MobileWorkspaceDto;
+    const workspace = { runtimeStatus: "disconnected", feed: [{ id: "item-1" }], settings: { textScale: 100 } } as unknown as import("@ordibot/contracts").MobileWorkspaceDto;
     const next = reduceMobileWorkspaceEvent(workspace, {
       id: "event-mobile", family: "mobile", type: "mobile.snapshot", aggregateId: "session-1",
       occurredAt: "2026-09-20T03:00:00Z", payload: { frameHash: "sha256:abc" },
@@ -55,7 +55,7 @@ describe("runtime UI state", () => {
     expect(next.settings).toBe(workspace.settings);
   });
   it("does not mark the device observing when a pending research goal is saved", () => {
-    const workspace = { runtimeStatus: "disconnected" } as import("@ordinconn/contracts").MobileWorkspaceDto;
+    const workspace = { runtimeStatus: "disconnected" } as import("@ordibot/contracts").MobileWorkspaceDto;
     expect(reduceMobileWorkspaceEvent(workspace, {
       id: "task-event", family: "mobile", type: "mobile.research_task_created", aggregateId: "task-1",
       occurredAt: "2026-09-27T03:00:00Z", payload: { taskId: "task-1", status: "pending" },

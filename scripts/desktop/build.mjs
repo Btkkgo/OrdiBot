@@ -3,7 +3,10 @@ import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const args = process.argv.slice(2);
-const command = process.platform === "darwin"
+const isOrdiBot = JSON.parse((await import("node:fs")).readFileSync(`${root}apps/desktop/src-tauri/tauri.conf.json`, "utf8")).productName === "OrdiBot";
+const command = isOrdiBot
+  ? [process.execPath, [fileURLToPath(new URL("ordibot-build.mjs", import.meta.url)), ...args]]
+  : process.platform === "darwin"
   ? ["python3", [fileURLToPath(new URL("macos_latest.py", import.meta.url)), ...args]]
   : [process.execPath, [`${root}node_modules/@tauri-apps/cli/tauri.js`, "build", ...args]];
 const result = spawnSync(command[0], command[1], {

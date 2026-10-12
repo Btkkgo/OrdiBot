@@ -1,4 +1,4 @@
-import type { SignalDto } from "@ordinconn/contracts";
+import type { SignalDto } from "@ordibot/contracts";
 import type { Translator } from "../i18n";
 import { SignalCard } from "../components/SignalCard";
 import { filterSignals, type SignalFilter } from "./overviewDashboard";

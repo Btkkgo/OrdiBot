@@ -1,8 +1,8 @@
 import { MobileDataStream, MobileObservationContext } from "../components/MobileCollectionPanels";
-import type { MobileDataProvenance } from "@ordinconn/contracts";
+import type { MobileDataProvenance } from "@ordibot/contracts";
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import type { IntelligenceItemDto, MobileGoalDto, MobileGoalPlanDto, MobileActionInputDto, MobileWorkspaceDto, SignalDto } from "@ordinconn/contracts";
+import type { IntelligenceItemDto, MobileGoalDto, MobileGoalPlanDto, MobileActionInputDto, MobileWorkspaceDto, SignalDto } from "@ordibot/contracts";
 import type { Translator } from "../i18n";
 import { MobileDeviceView } from "../components/MobileDeviceView";
 import { WorkbenchDataBrowser } from "../workbench/WorkbenchDataBrowser";

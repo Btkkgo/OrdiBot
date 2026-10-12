@@ -1,4 +1,4 @@
-import type { MobileGoalDto } from "@ordinconn/contracts";
+import type { MobileGoalDto } from "@ordibot/contracts";
 import { useRef, useState } from "react";
 import { capturedObjectIds, WorkbenchCommandRunner, type WorkbenchRuntimePort } from "./commands";
 import type { AgentPlan } from "./model";

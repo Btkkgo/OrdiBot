@@ -1,139 +1,42 @@
-# OrdinConn
+# OrdiBot
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-> 当前 M3：已保存 Google Gemini / `gemini-3.6-flash`，Provider Count **1**。新一轮带间隔的真实 Planner-only 批次为 **1/5**（执行 3 次、未运行 2 次；10 attempts，6 个 HTTP 429、2 个 HTTP 503、1 个 HTTP 200、1 次 deadline 中断）。有界重试回归 PASS；真实验收按 **FREE_TIER_RATE_LIMIT_BLOCKED** 停止；Full Autonomous M3 仍为 **NOT_COMPLETE**。下文 Phase 2–5 计数属于历史记录。部署定位为 **PERSONAL / LOCAL-ONLY APPLICATION**；Apple 签名及分发为 **OUT_OF_SCOPE_LOCAL_ONLY**。
+**Your Desktop AI Companion** — 桌面上下文 AI 助手与远程电脑智能体。这是原 OrdinConn 仓库的更名，保留原 Git 历史。
 
+采用 Tauri v2、Rust、React 与 TypeScript。深色悬浮 Chat 窗口包含窄导航与原创小型二维角色，并与可扩展的 Agent 工作台共用一个运行时。金融 Dashboard、采集器、交易和 Android 自动操作已退出活跃桌面应用，历史资产仍可恢复。
 
-[GitHub 仓库](https://github.com/Btkkgo/OrdinConn) · [当前 Mobile Gate](https://github.com/Btkkgo/OrdinConn/issues/1)
+- **Chat：**通过 Model Gateway 调用用户配置的 OpenAI-compatible 服务，支持多轮文字、流式回复、取消、输出限制和明确错误。未配置时不会给出模拟回答。
+- **Context：**按需附加复制的文字、主动获取前台应用与窗口元数据、截取并确认截图。不持续监控屏幕、键盘或剪贴板。截图问答需要开启视觉能力。
+- **Agent：**实现 OpenAI 托管 Agents API 适配器，任务历史、记录、结果、网站来源批准与取消均由服务响应驱动。Meta Muse 和 Grok Bot 仅为明确标注的外部入口，未宣称原生任务 API 接入。
+- **本地控制：**悬浮窗口、置顶设置、模式与窗口位置恢复、菜单栏/托盘入口，以及成功注册后的 Command/Ctrl + Shift + Space 快捷键。
 
-**供 Owner 自己的 Mac 使用的开源、模型无关 AI Agent Runtime。**
+当前界面使用简体中文，英文界面本地化待办。用户已决定先完成界面和本地功能，配置密钥后再验收真实 API。代码与本地测试通过不能证明线上服务可用。macOS 为首个本地交付目标；Windows 需独立编译和交互验收。参见[当前状态](docs/CURRENT_STATUS.zh-CN.md)。
 
-OrdinConn 的目标，是为 AI 模型提供一层能够感知、理解并操作电脑与移动设备环境的运行时。当前 V0.1 应用首先把这套运行时用于传统金融与加密市场的可追溯情报处理。
+## 本地运行
 
-OrdinConn 不是另一个聊天机器人。它关注的是模型推理与真实工具之间那层可审计、可授权、可验证的基础设施。
+需要 Node.js 22+、Rust stable，以及目标平台的 [Tauri 前置依赖](https://v2.tauri.app/start/prerequisites/)。macOS 需要 Xcode 命令行工具；Windows 需要 MSVC 与 WebView2。
 
-```text
-AI Model
-   ↓
-Reasoning
-   ↓
-OrdinConn Runtime
-   ↓
-Perception
-   ↓
-Tools / Applications
-   ↓
-Action
-   ↓
-Verification
+```sh
+npm ci
+npm run desktop:dev
 ```
 
-## 为什么开发 OrdinConn
+在 **Models** 配置 Provider、Base URL、Model ID、视觉能力，并在本地填写密钥。密钥交给系统安全存储，不写入 React 存储或 JSON 历史文件。默认回答风格为 Concise，可切换 Normal 和 Detailed。远程 Agent 使用独立 OpenAI 密钥，需要对应账户权限和额度。
 
-模型可以替换，但工具调用、权限、证据来源与结果验证需要稳定协议。OrdinConn 把这些能力从具体模型中分离出来，让 Agent 能读取真实状态、只在授权范围内行动、验证结果，并留下完整审计记录。
-
-## 架构
-
-Rust 核心保持与传输层无关；React 通过类型化 IPC 与 Tauri Host 通信。所有模型统一经过 Model Gateway，所有数据源统一经过 Connector Registry。
-
-当前金融智能闭环为：
-
-```text
-Data → Evidence → Signal → Agent Report → Trade Proposal → Approval → Paper Execution
-```
-
-参见[架构总览](docs/architecture/OVERVIEW.zh-CN.md)（[English](docs/architecture/OVERVIEW.md)）和[产品基线](docs/PRODUCT_BASELINE.md)。
-
-## 当前状态
-
-- 版本：`0.1.0`
-- Mobile 阶段：M1.5 真实环境验收完成
-- M1.5 Gate：**通过**
-- 强制验收项：**15 PASS / 0 FAIL / 0 BLOCKED / 0 NOT RUN**
-- M2：**已验证 — 30 PASS / 0 FAIL / 0 BLOCKED / 0 NOT RUN**（[Issue #7](https://github.com/Btkkgo/OrdinConn/issues/7)；[验收记录](docs/mobile/M2_ACCEPTANCE.zh-CN.md)）
-- 真实资金执行：未实现，V0.1 仅支持 Paper Execution
-
-真实 Android Gate 已在 Android 16 ARM64 Emulator 上通过环境、Frame、UI Tree、Snapshot Parse、Element Refs、`MobileObservation`、Workspace Projection 和 Session Shutdown。另一次打包桌面 Smoke 真实执行了 Rust → Tauri Command/Event → React 链路，覆盖状态、白名单错误、Session Start、Observation 和 Stop。独立的真实密码节点测试也确认敏感内容不会进入序列化 Capture。详细边界见[当前状态](docs/CURRENT_STATUS.zh-CN.md)。
-
-## Mobile Intelligence
-
-M0/M1 已实现设备会话契约、受限 Screen Frame、语义 UI Snapshot、作用域化 Element Ref、敏感节点脱敏策略、类型化 IPC 投影、持久化和 `MobileObservation`。
-
-真实 Frame Capture、UI Tree、敏感节点脱敏、Observation、类型化 IPC 和关闭链路已经在专用 `OrdinConn_M1_5` AVD 上验证。M2 的 30 项 Gate 也已通过：真实 Settings 受限导航、负向安全检查、脱敏 Receipt/Audit、打包 GUI 人工 Tap 和 M1.5 回归。即使用户将其他 App 加入白名单，生产 M2 动作仍只限 Settings/Settings Intelligence。M3 Phase 2/3 基础与 Phase 4 单步 Executor 已在本地实现；完整自主验收为 NOT_COMPLETE（Provider 0、Phase 5 集成已实现待验收），见 [M3 Executor](docs/mobile/M3_EXECUTOR.zh-CN.md)；本轮未创建或发布 X 内容。
-
-## Computer Runtime
-
-OrdinConn 定义了受限的电脑感知与操作接口、权限门、审计事件和操作后验证。设计目标不是持续录屏或无限制自动化。当前 Computer Runtime 仍属部分实现，详见[路线图](docs/roadmap/README.md)。
-
-## 模型无关
-
-所有模型适配器都经过 Model Gateway。当前仓库包含 OpenAI-compatible Adapter 和可重复的 Mock Adapter。模型输出始终属于推断，不会仅因模型生成就自动成为 Evidence。
-
-## 安全与权限
-
-- 不采集私钥、助记词或密码输入框内容。
-- 用户资金操作必须显式批准；V0.1 不执行真实资金操作。
-- Trade Proposal 在进入适配器前必须获得精确绑定且有时限的 Approval Capability。
-- Mobile 访问受 Application Allowlist 约束，敏感 UI 节点必须脱敏。
-- 公开同步发现疑似 Secret、本机路径或禁止文件时一律 Fail Closed。
-
-参见[安全与批准](docs/SAFETY_AND_APPROVAL.md)、[Mobile Security](docs/mobile/MOBILE_SECURITY.md)和[安全报告规则](SECURITY.zh-CN.md)（[English](SECURITY.md)）。
-
-## 开发与验证
-
-```bash
-npm install
+```sh
 npm test
 npm run typecheck
-npm run build
-cargo test --workspace
-cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test --locked
 npm run desktop:build
 ```
 
-依赖真实外部环境的验收必须与 Fixture 覆盖分开记录。
+正式构建入口生成本地 ad-hoc 签名的 macOS `OrdiBot.app` 并记录源码/可执行文件指纹。无需 Apple Developer 账户、公证或商业签名。Windows 构建 NSIS 安装包。[构建说明](docs/MACOS_BUILD.zh-CN.md)。
 
-## Build in Public
+新 `ai.ordibot.desktop` 数据和密钥命名空间与保留的 `ai.ordinconn.desktop` 旧数据分离，不自动导入金融记录或原密钥。截图像素仅暂存在内存；主动发送的复制文本会进入本地对话历史。[迁移审计](docs/ordibot/MIGRATION.zh-CN.md)。
 
-GitHub 是 OrdinConn 唯一的公开工程事实来源。Issue 定义正式工作，DevLog 记录决策、失败、验证和剩余风险。X 只保留人工审核的草稿，Codex 不会自动发布。
+## 项目记录
 
-- [开发日志](docs/devlog/2026-09-20.zh-CN.md) · [English](docs/devlog/2026-09-20.md)
-- [问题与解决方案](docs/PROBLEMS_AND_SOLUTIONS.zh-CN.md) · [English](docs/PROBLEMS_AND_SOLUTIONS.md)
-- [Codex 现场笔记](docs/codex/CODEX_FIELD_NOTES.zh-CN.md) · [English](docs/codex/CODEX_FIELD_NOTES.md)
-- [公开开发规则](docs/open-source/BUILD_IN_PUBLIC.zh-CN.md) · [English](docs/open-source/BUILD_IN_PUBLIC.md)
+[产品基线](docs/PRODUCT_BASELINE.zh-CN.md) · [架构](docs/ARCHITECTURE.zh-CN.md) · [路线图](docs/open-source/ROADMAP.zh-CN.md) · [Provider 核查](docs/ordibot/PROVIDERS.zh-CN.md) · [安全](docs/open-source/SECURITY_AND_PRIVACY.zh-CN.md) · [公开开发规则](docs/open-source/BUILD_IN_PUBLIC.zh-CN.md) · [Issue #17](https://github.com/Btkkgo/OrdiBot/issues/17)
 
-## 文档
-
-- [当前状态](docs/CURRENT_STATUS.zh-CN.md) · [English](docs/CURRENT_STATUS.md)
-- [架构](docs/architecture/OVERVIEW.zh-CN.md) · [English](docs/architecture/OVERVIEW.md)
-- [Mobile Intelligence](docs/mobile/MOBILE_INTELLIGENCE.md)
-- [Model Gateway](docs/MODEL_GATEWAY.md)
-- [Connector 与 Source Registry](docs/SOURCE_REGISTRY.md)
-- [架构决策](docs/decisions/README.zh-CN.md) · [English](docs/decisions/)
-- [安全与隐私](docs/open-source/SECURITY_AND_PRIVACY.zh-CN.md) · [English](docs/open-source/SECURITY_AND_PRIVACY.md)
-
-## 路线图
-
-所有阶段必须通过真实 Gate 后才能前进。M1.5 与 M2 已通过真实 Emulator Gate。M3 的生产级 App Skills、M4 的 Evidence 晋升及 M5 的物理 Android 设备继续不在本轮范围。详见[公开路线图](docs/roadmap/README.zh-CN.md)（[English](docs/roadmap/README.md)）。
-
-## 贡献
-
-项目采用 Issue-first 开发。重要工作开始前应创建或关联范围明确的 Issue，并保留 Evidence 与模型推断的边界，提交相关验证结果。参见[贡献指南](CONTRIBUTING.zh-CN.md)（[English](CONTRIBUTING.md)）。
-
-## 已知限制
-
-- 手机导航受限于 Settings/Settings Intelligence；真实 M3 Planner + Executor 验收为 BLOCKED_MODEL_NOT_CONFIGURED。
-- Computer Runtime 仍是受权限约束的部分实现。
-- 当前金融执行适配器仅支持 Paper Execution。
-- 历史 Process Fixture 并发失败保留在 DevLog。Phase 5 隔离 lifecycle 资源，重复调用 20/20 通过；见[当前验证记录](docs/mobile/M3_PHASE5.zh-CN.md)。
-
-## License
-
-OrdinConn 使用 [MIT License](LICENSE)。
-
-## Mobile Interaction 与数据采集 — 2026-10-02
-
-[Issue #14](https://github.com/Btkkgo/OrdinConn/issues/14) 在既有 Android Runtime 和 SQLite 上增加人工控制、本地保存的 `Observe → Interact → Observe → Diff → Extract → Data Object → Data Stream → Provenance` 闭环。数据链为 `Source → Observation → Extraction → Data Object → Insight → Plan → Action → Result`；本阶段实现到 **Data Object**，Insight/Plan 保留接口。Home 提供实际采集对象、元素检查与人工操作、确定性 Observation Context。敏感值在持久化前脱敏，确定性去重保留重复观察及原始证据。自动 fixture 验证与 **REAL MOBILE DATA ACQUISITION ACCEPTANCE = PASS**（2026-10-02，H1–H2 人工；H3–H7 用户明确授权 Codex 执行） 分开；生产动作沿用既有模拟器/Settings 安全范围。
-
-**初始实现阶段的历史记录：** M3 状态与历史、Provider、retry/backoff/deadline、Keychain 和保留的 App 均不变。自动真实 Android 动作 **0**；Codex 人工 Android 动作 **0**；真实 Provider 请求 **0**；签名验证 **0**；X Draft **NONE**。允许 Rust/frontend 编译；支持的包装器会执行 `codesign`，因此 macOS 验收打包 **NOT RUN / BLOCKED BY THE NO-SIGNING BOUNDARY**。参见[实现与人工验收](docs/mobile/MOBILE_DATA_ACQUISITION.zh-CN.md)。
+历史 OrdinConn 文档保留在 `docs/legacy/ordinconn-20261012/` 及 Git 历史中，不代表当前 OrdiBot 产品。

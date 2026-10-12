@@ -6,7 +6,7 @@ import type {
   MobileElementDto,
   MobileUiSnapshotDto,
   MobileSwipeDirectionDto,
-} from "@ordinconn/contracts";
+} from "@ordibot/contracts";
 import { useState } from "react";
 import type { Translator } from "../i18n";
 

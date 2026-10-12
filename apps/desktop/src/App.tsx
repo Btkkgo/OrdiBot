@@ -1,6 +1,6 @@
-import { mobileActionType } from "@ordinconn/contracts";
+import { mobileActionType } from "@ordibot/contracts";
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
-import type { AgentMessageDto, AppSnapshotDto, IntelligenceItemDto, MobileActionInputDto, MobileGoalDto, MobileGoalPlanDto, MobileWorkspaceDto } from "@ordinconn/contracts";
+import type { AgentMessageDto, AppSnapshotDto, IntelligenceItemDto, MobileActionInputDto, MobileGoalDto, MobileGoalPlanDto, MobileWorkspaceDto } from "@ordibot/contracts";
 import { AppShell } from "./components/AppShell";
 import { DataDetailModal } from "./components/DataDetailModal";
 import type { PageId } from "./components/Navigation";

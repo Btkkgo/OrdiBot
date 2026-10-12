@@ -1,6 +1,6 @@
 import { Bot, ChevronLeft, ChevronRight, FileText, Send, ShieldCheck, Sparkles, X } from "lucide-react";
 import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
-import type { AgentMessageDto, AgentReportDto, ApprovalRequestDto, ExecutionRecordDto, SignalDto, TradeProposalDto } from "@ordinconn/contracts";
+import type { AgentMessageDto, AgentReportDto, ApprovalRequestDto, ExecutionRecordDto, SignalDto, TradeProposalDto } from "@ordibot/contracts";
 import type { Translator } from "../i18n";
 import { shouldSendOnKeyDown } from "./agentInput";
 

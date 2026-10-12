@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import type { MobileWorkspaceDto } from "@ordinconn/contracts";
+import type { MobileWorkspaceDto } from "@ordibot/contracts";
 import { createTranslator } from "../i18n";
 import { WarehousePage } from "./WarehousePage";
 

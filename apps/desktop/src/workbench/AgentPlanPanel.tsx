@@ -1,4 +1,4 @@
-import type { MobileGoalDto, MobileGoalPlanDto } from "@ordinconn/contracts";
+import type { MobileGoalDto, MobileGoalPlanDto } from "@ordibot/contracts";
 import { EmptyState } from "../components/WorkspaceUI";
 import type { Translator } from "../i18n";
 import type { AgentPlan } from "./model";

@@ -24,7 +24,7 @@ Scanner 只报告 File 与 Detector Category，不输出疑似值。macOS Home P
 
 ## 产品安全边界
 
-OrdinConn 不采集 Private Key、Recovery Phrase 或 Password-field Content。真实资金 Action 需要显式批准，且 V0.1 未实现真实资金执行。Mobile Collection 受 Application Allowlist 约束，Sensitive UI Node 会被脱敏，`MobileObservation` 不能直接发布 Signal。
+OrdiBot 仅在主动操作后读取复制文本、前台元数据或截图。截图须确认，像素不保存到历史。用户配置密钥使用系统安全存储；附件是未经信任的上下文。不启动本地自主电脑引擎或金融执行。托管任务限公开只读，不支持的登录/工具批准保持阻止。
 
 ## 事件响应
 

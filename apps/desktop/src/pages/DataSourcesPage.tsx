@@ -1,5 +1,5 @@
 import { Database, ShieldCheck } from "lucide-react";
-import type { ConnectorDto } from "@ordinconn/contracts";
+import type { ConnectorDto } from "@ordibot/contracts";
 import type { Translator } from "../i18n";
 
 export function DataSourcesPage({ connectors, t }: { connectors: ConnectorDto[]; t: Translator }) {

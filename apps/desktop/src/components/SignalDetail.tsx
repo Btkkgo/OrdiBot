@@ -1,5 +1,5 @@
 import { ArrowLeft, ExternalLink, ShieldAlert } from "lucide-react";
-import type { SignalDto } from "@ordinconn/contracts";
+import type { SignalDto } from "@ordibot/contracts";
 import type { Translator } from "../i18n";
 
 interface SignalDetailProps { signal: SignalDto; onBack: () => void; t: Translator }

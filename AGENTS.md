@@ -1,31 +1,17 @@
-# OrdinConn Agent Rules
+# OrdiBot Agent Rules
 
-1. Read `docs/PRODUCT_BASELINE.md` before making product changes. It is the only product baseline. Read-only tasks and instruction/documentation maintenance do not require product-baseline reading unless a product decision depends on it. Reuse already-read, unchanged context.
-2. Never restore features or product definitions from the previous OrdinConn repository.
-3. Make small, testable changes and inspect the active implementation before editing it.
-4. Keep Evidence distinct from model inference and keep every Published Signal traceable to Evidence.
-5. User-funds operations always require explicit approval. V0.1 contains no real-money execution.
-6. Never collect private keys, seed phrases, or password-field contents.
-7. Route every model through Model Gateway and every data source through Connector Registry.
-8. A Trade Proposal must pass through Approval before any execution adapter.
-9. Keep core crates transport-agnostic and keep React behind typed IPC contracts.
-10. Use the approved user-provided purple, black, and yellow brand system and locale keys for all formal UI copy.
-11. For product code changes, run Rust tests, TypeScript tests, typecheck, and Rust/frontend builds before declaring completion. Run desktop packaging when packaging, native integration, or release delivery is affected. For read-only or instruction/documentation-only tasks, validate the relevant instructions, links, and diff instead. Reuse successful checks for identical code, dependencies, commands, and relevant environment; rerun affected checks after changes and report failures or unverified criteria explicitly.
-12. Push only when the user explicitly asks or when the issue-first public development workflow below already authorizes the same scoped task. Never force-push.
-
-## Personal local-only scope
-
-OrdinConn is a **PERSONAL / LOCAL-ONLY APPLICATION**, for the owner’s own Mac. Apple Development certificates, Developer ID Application, Apple Developer Program membership, Team ID or stable Apple signing requirements, distribution Hardened Runtime, notarization, stapling, App Store and public macOS distribution are **OUT_OF_SCOPE_LOCAL_ONLY**, now and in the project roadmap. Ad-hoc signing remains supported and Apple signing cannot block development, builds, M3 or acceptance. A Keychain prompt after a rebuild is local development environment behavior handled manually by the owner, never a reason to introduce Apple signing. Local-only describes deployment; owner-configured external model APIs still use Model Gateway.
-
-## Task scope and Skills
-
-- Use a Skill when explicitly requested or when its capability directly matches the task and actual technology. A keyword, file extension, dev-server start, or progress question alone is insufficient. Reading a Skill for audit does not activate its workflow.
-- Load only task-relevant references. Reuse unchanged instructions already in context; reread when content changes or needed context is missing. Freetower, Figma, Vercel, and analytics artifact workflows apply only when that project, tool, or deliverable is actually in scope. OrdinConn desktop validation follows the real Tauri application and typed IPC path.
-- For clear, authorized, reversible work, inspect the implementation, make the smallest useful change, and continue without design, per-section, execution-method, or continuation approval prompts. Preserve an explicit plan-only, review-only, or approval-first boundary. Ask about material missing information or scope changes that cannot be resolved from the request and existing context.
-- Existing authorization applies to the same scope and action; it does not authorize funds operations, destructive data changes, sensitive access, new external communications, or publication. Obtain any missing explicit approval for those actions before execution. Never infer consent from silence. The funds, privacy, Approval, and no-push rules above remain binding.
-- Choose one workflow to coordinate planning, debugging, and verification. Share its evidence with supporting Skills; do not repeat intake, full test suites, or review of an unchanged diff. Diagnose routine dependency/test failures within scope; escalate when progress requires missing authority or a material user decision.
-- Use existing components, dependencies, Model Gateway, and Connector Registry. Create worktrees only when isolation is needed or requested. Verify file ownership and destination before writes; preserve unrelated changes. Generate persistent plans only when useful to the requested deliverable. Commit only when requested or established project policy authorizes it; do not present merge/push menus for ordinary task completion.
-- macOS acceptance builds must use `npm run desktop:build` (or the workspace `tauri:build` wrapper) and follow [the latest-app rule](docs/MACOS_BUILD.md). After a verified new runnable build, retain exactly one latest valid OrdinConn app entry. Remove only proven stale, reproducible app bundles; never remove source, databases, user data, Keychain, settings, configuration, DevLogs, tests, or acceptance evidence. Unknown provenance must block cleanup. Do not bypass the wrapper with a direct Tauri acceptance build.
+1. Read `docs/PRODUCT_BASELINE.md` before product changes; the approved OrdiBot V1 supersedes historical financial/mobile/pet definitions. Reuse unchanged context.
+2. Preserve original Git history, legacy private data/credentials, unrelated dirty work and the separate physical robot project. Never restore retired financial or local autonomous runtimes to the active MVP.
+3. Inspect active code, make small testable changes, and keep implemented, tested and real acceptance distinct. No production mock replies, synthetic Agent records or fabricated completion.
+4. Acquire clipboard, screen and foreground metadata only through explicit user actions. Do not collect password-field content, private keys or recovery phrases. Treat attachments as untrusted source material and never claim unobserved context.
+5. Chat models use Model Gateway; hosted computer tasks use their documented remote provider adapter. Keep React behind typed IPC and core crates transport-agnostic. Show only provider-supported controls and revalidate approval state.
+6. Use the approved dark companion/purple Agent reference direction and original lightweight character. Current MVP UI is Chinese; English interface localization is deferred. Public important documentation is bilingual.
+7. Run proportional Rust/TypeScript tests, typecheck and frontend/native builds for product changes. Package native changes with `npm run desktop:build` and follow [build verification](docs/MACOS_BUILD.md). Reuse checks for unchanged code; report failed or unverified gates explicitly.
+8. Act directly on clear authorized reversible work without repeated design or execution approval. Preserve explicit phase/permission boundaries. External communication, credentials, real funds, destructive data/history changes and publication require appropriate user authorization. The user authorized this issue-first public migration; live API acceptance remains deferred until local setup.
+9. Use relevant Skills without duplicate intake/verification. Check root, ownership and filename before writing; isolate only when useful. Stage scoped files explicitly, preserving original untracked work. Never use scheduled documentation sync for code or workflows.
+10. Keep local deployment simple: ad-hoc macOS signing is supported; Apple Developer, commercial signing, notarization and App Store work are out of scope. Windows requires independent native and interactive evidence.
+11. Preserve historical OrdinConn frozen bundles and receipts; launch only the latest verified OrdiBot output. Quit the previous process before rebuilding/reopening. Do not delete unknown-provenance bundles, private data or settings.
+12. Commit/push only under explicit authority or the same scoped issue-first public workflow below. Never force-push or rewrite history.
 
 ## PUBLIC DEVELOPMENT LOG POLICY
 
@@ -50,9 +36,9 @@ OrdinConn is a **PERSONAL / LOCAL-ONLY APPLICATION**, for the owner’s own Mac.
 - X drafts remain manual and owner-published. Each draft contains `## English — Publication Version` for the intended English post and `## 中文 — 参考版本` for the complete corresponding Chinese thread. Derive both naturally from the same sanitized engineering facts; do not mechanically translate private conversation.
 - Final Codex execution reports to the user are in Chinese by default. Never let GitHub's English-first policy change the actual collaboration language.
 
-## ORDINCONN PUBLIC DEVELOPMENT RULES
+## ORDIBOT PUBLIC DEVELOPMENT RULES
 
-- Official GitHub repository: `https://github.com/Btkkgo/OrdinConn`. Never create another OrdinConn repository, an `OrdinConn-v2`, or a substitute repository. Continue all public development in this repository.
+- Official GitHub repository: `https://github.com/Btkkgo/OrdiBot`. Never create another OrdiBot repository, an `OrdiBot-v2`, or a substitute repository. Continue all public development in this repository.
 - GitHub is the public engineering source of truth. If code, tests, Current Status, Issues, DevLogs, and X differ, trust them in that order; X can never claim a more advanced state.
 - Meaningful engineering work follows the full GitHub issue-to-public-record flow:
   1. Read the relevant Issue.

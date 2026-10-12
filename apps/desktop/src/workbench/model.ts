@@ -1,4 +1,4 @@
-import type { IntelligenceItemDto, MobileWorkspaceDto } from "@ordinconn/contracts";
+import type { IntelligenceItemDto, MobileWorkspaceDto } from "@ordibot/contracts";
 
 export const categoryIds = ["news", "stocks", "chat", "feedback", "other"] as const;
 export type CategoryId = typeof categoryIds[number];

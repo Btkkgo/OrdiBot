@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { MobileRuntimeSettingsDto, MobileWorkspaceDto, ModelProviderDto } from "@ordinconn/contracts";
+import type { MobileRuntimeSettingsDto, MobileWorkspaceDto, ModelProviderDto } from "@ordibot/contracts";
 import { Database, Globe2, MonitorSmartphone, Type } from "lucide-react";
 import type { Locale, Translator } from "../i18n";
 import type { ConnectionTestResult, ProviderInput } from "../runtime/client";

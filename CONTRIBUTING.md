@@ -1,4 +1,4 @@
-# Contributing to OrdinConn
+# Contributing to OrdiBot
 
 [English](CONTRIBUTING.md) | [简体中文](CONTRIBUTING.zh-CN.md)
 

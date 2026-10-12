@@ -1,85 +1,19 @@
-# OrdinConn 产品基线 — V0.1 Foundation
+# OrdiBot V1 产品基线
 
 [English](PRODUCT_BASELINE.md) | [简体中文](PRODUCT_BASELINE.zh-CN.md)
 
-> 之前的 OrdinConn 产品基线均已废止。本文件是 OrdinConn V0.1 的唯一产品基线。
+2026-10-12 生效。用户已确认的 OrdiBot V1 方向替代历史金融、Android 自主操作与独立桌面宠物定义。当前范围为 **Your Desktop AI Companion**：Chat Window、Context Assistant、Remote Agent Workspace。
 
-## 产品
+Chat 为深色小型悬浮窗口，使用 Chat/Context/Agent/History/Models/Settings 窄导航、柔白文字、圆角输入和窗口旁的小型原创二维角色。角色与 Chat 一起移动、收起。Agent 在同一原生窗口展开深色工作台，使用克制的紫色渐变、真实状态和可折叠服务记录；切回 Chat 恢复窗口位置与尺寸。独立宠物运行时、金融 Dashboard、本地自主电脑操作引擎和自建云端虚拟机不在范围内。
 
-OrdinConn 是 AI 金融情报与执行 Agent：主动采集市场信息、形成证据、识别可解释信号、生成报告，并仅在用户明确批准后执行允许的动作。
+上下文按用户意愿获取：优先复制文字，其次确认截图，再按平台能力主动获取前台应用/窗口元数据。不持续监控；权限缺失时降级为复制文字或手动附件。附件属于不可信源材料。模型不得声称访问未收到的屏幕或文件。
 
-两个市场为 Traditional Finance 与 Crypto，共享流程：
+普通对话复用 Model Gateway 与 OpenAI-compatible API。配置包括 Provider、Base URL、系统安全存储的 API Key、Model ID、视觉能力和输出限制。默认直接回答实际问题，普通问题优先 1–3 句话，未要求时不独立研究。提供 Concise/Normal/Detailed。流式回复、取消、超时、重试错误须明确；生产入口无模拟回答。
 
-`Data -> Evidence -> Agent Analysis -> Signal -> Report -> User Approval -> Action -> Result -> Memory`
+远程电脑任务交给具有正式接口的托管服务。普通模型聊天或打开服务网站不能代表电脑 Agent 接入。状态、记录、批准和结果必须来自服务，只显示支持的控制。首个 OpenAI 适配器支持公开只读浏览器任务和网站来源批准，不支持登录或自定义工具执行。提交结果不明确时不自动重复。用户应在本地核查权限、最新价格和账户限额。
 
-OrdinConn 定位为 **PERSONAL / LOCAL-ONLY APPLICATION**，仅供 Owner 自己的 Mac 使用。Apple Development Certificate、Developer ID Application、Apple Developer Program、Team ID 或稳定 Apple 签名要求、分发用途的 Hardened Runtime、notarization、stapling、App Store 与公开 macOS 分发，当前及后续路线统一为 **OUT_OF_SCOPE_LOCAL_ONLY**。继续支持 ad-hoc signing；不得以 Apple 签名阻塞开发、Build、M3 或 Acceptance。重建后的 Keychain 提示属于本地开发环境行为，由 Owner 人工处理，不得重新引入 Apple 签名作为解决方案。Local-only 指部署范围；Owner 配置的外部模型 API 仍通过 Model Gateway。
+macOS Apple Silicon 优先交付，Windows 独立编译与测试。允许本地 ad-hoc 签名；Apple Developer、公证、App Store 和商业发行不在范围。中文沟通与当前界面；重要公开记录英文主版配套中文。英文界面本地化待办。
 
-## V0.1 范围
+保留原仓库、refs、Stars、Issues/PRs、私有 SQLite、密钥与独立实体机器人项目。同一个仓库更名 OrdiBot，不重建、不重写历史。新产品存储明确保留旧命名空间；退役代码可恢复，但不进入默认原生/前端运行时。
 
-包含桌面 Shell、Agent Runtime、Model Gateway、Tool Runtime、Approval Engine、Evidence 与 Signal 领域、传统金融与加密体验、上下文 Agent Dock、SQLite 持久化、Mock Connector、公开数据 Collector Runtime、Source Registry、确定性 Strategy Engine、至少 18 个演示信号、Agent Report、Trade Proposal、Approval Capability 和 Paper Execution。
-
-Mobile Intelligence 增加 Android Emulator 观察、语义 UI Snapshot、脱敏 Mobile Observation，以及 Home/Warehouse/Settings Shell。已验证 M2 增加六种人工触发且绑定快照的动作（Tap、Swipe、安全 Type、Back、Home、OpenApp），执行默认拒绝与白名单、敏感/金融目标拒绝、输入前审计、动作后观察和回执。M2 不增加自主手机执行。手机数据仍通过 Source Registry、Evidence、Strategy 与 Signal 准入。
-
-不包含真实经纪商或交易所执行、实盘交易、充值、提现、转账、钱包签名、私钥或助记词访问、订阅、云平台、高频后台自动化、高级计算机视觉，以及自主登录、发布、消息发送、下单或超出 M3 有界 Settings 目标范围的操作。
-
-## 市场与 ABC
-
-传统金融涵盖股票、ETF、期货、石油、黄金、白银、外汇、债券与商品：A — Trading Signal；B — Event Signal；C — Demand Signal。
-
-Crypto 涵盖主要资产、稳定币、NFT/Ordinals、Meme、现货、永续与期权：A — On-chain Signal；B — Event Signal；C — Exchange Signal。
-
-信号必须说明方向、置信度、紧迫性、时间范围、证据、催化剂、风险、失效条件与观察。仅买入/卖出标签不是有效信号。
-
-## Evidence 策略
-
-Connector 与 Agent 生成 Signal Candidate。只有通过验证且至少关联一条非 `MODEL_INFERENCE` Evidence 后，Candidate 才能成为 Published Signal。推断可以解释、综合、形成传导路径或假设，不能冒充来源事实。
-
-Evidence 关联分为 `primary`、`supporting`、`contradicting`、`context`。冲突保持可见。最终质量由 Signal Engine 计算，不由模型决定。不充分 Candidate 不能生成正式报告、提案、审批或执行。
-
-## Agent 与模型策略
-
-Rust Agent Runtime 使用 Thread、Turn、Item、Tool、Approval、Event 协议，支持流式输出、标准化工具调用、上下文注入、中断、取消、重试边界、类型化错误与已完成 Item 持久化。
-
-所有模型通过 Model Gateway。V0.1 实现可配置 OpenAI-compatible `/v1/chat/completions`，支持非流式、流式与明确声明的工具调用。Agent Runtime 不接触厂商响应格式；Provider 能力明确声明。Mock Model 在无凭据时维持演示可用。
-
-桌面默认语言为简体中文，完整支持 English 与简体中文 `zh-CN`，可在设置中即时切换。正式文案使用 Locale Key，无效或缺失偏好回退简体中文。领域、API、文件、代码、Agent 协议、Signal、Evidence 与 Report 字段采用 English。
-
-## Runtime 与持久化
-
-采用 Tauri 单进程内嵌 Rust Runtime。React 只通过类型化命令和事件通信，不直接访问 SQLite、Provider、文件或核心状态。核心 Crate 与传输无关。
-
-SQLite 关系表存当前状态；`runtime_events` 存仅追加审计；实时增量使用内存 Event Bus。启动时将不安全未完成工作标为 Interrupted，不自动重放有副作用工具。
-
-公开数据遵循 `Continuous Collection -> Rolling History -> Baseline -> Ready Strategy -> SignalCandidate -> Evidence Gate -> Published Signal -> Agent Analysis`。Runtime 管理按来源调度、有界历史、重启恢复聚合桶、长连接 WebSocket 重连/重订阅。Binance Spot 与 USDⓈ-M 使用独立标准化 Instrument。REST、WebSocket、RSS/Atom、HTML 与白名单仅观察手机 Collector 明确公开数据策略、健康、Schema Drift、速率预算、保留与确定性来源可靠性。禁止登录、付费墙、CAPTCHA、Cookie Gate、私人访问、私人消息与敏感字段采集。
-
-Strategy Readiness 与 Evidence 验证分离。`WARMING_UP`、`MISSING_INPUT`、`STALE_INPUT`、`SCHEMA_ERROR`、`INSUFFICIENT_HISTORY` 只生成可审计 Strategy Run，不生成普通 Candidate。真实 Published Signal 只能包含真实 Evidence；无就绪阈值触发时零真实 Signal 是有效结果。
-
-## Approval 与执行
-
-Signal 不等于 Trade。Published Signal 可创建版本化 Trade Proposal，独立 Approval Request 绑定精确 Canonical Proposal Hash。
-
-Approval Capability 为单次、对象绑定、版本绑定、限时、不可转移。React 不能签发或保存；SQLite 只保存摘要。校验、消耗和起始 Execution Record 创建具有原子性。模糊或无效条件全部拒绝。
-
-Paper Execution 是唯一 V0.1 执行适配器，必须通过真实 Approval；无有效 Approval 就无 Execution。
-
-## UI
-
-主导航为 Home、Warehouse、Settings。Home 集成情报、手机画面、关联 Signal 和上下文数据讨论。市场、Signal、Agent、Automation、Model、Source 与 Approval 能力通过已有整合工作区保留，不增加主导航入口。
-
-Desktop 批准方向为 Dark Intelligence Workspace：首页、资料库、设置共享无 Logo 的 AppShell/Sidebar、中性黑灰表面 Tokens、克制蓝色强调色、系统字体，以及统一 Panel、Card、控件、Badge、Alert 和空状态。首页保留实时数据、手机操作与 Agent 指令、Agent 计划三栏，比例约 27/43/30。数据数字使用稳定语义色（总量蓝紫、新闻蓝、股票绿、聊天紫、反馈琥珀、其他灰青），禁止虚构数据。设置采用同一中性主题，并平衡模型配置与已保存服务区域。正式文案使用英中 Locale Key；系统应用图标和窗口标题不变。开发视觉 Fixture 不得填充生产状态。
-
-## 验收
-
-应用启动后显示批准的深色主页工作台并保留仓库/设置。需实际 Tauri 截图对照、真实设备诊断/Frame、证据关联且去重的已加载对象统计、类型化人工命令与保留 Approval/Safety。Pending 研究目标不等于自主计划或执行；未支持的自主能力必须明确呈现。
-
-用户可切换双语、访问两市场与六 ABC Lane、打开 Signal、检查 Evidence、使用上下文 Agent、生成 Report、创建 Paper Trade Proposal、请求与批准后取得 Paper Execution Record。Model Settings 可配置 OpenAI-compatible Provider。本地最终 Commit 前测试与构建必须通过。
-
-## M3 有界目标扩展
-
-所有者授权的 M3 Phase 5 将真实 Model Gateway Planner 接入既有真实单步 Executor，仅用于 Android Settings 及其系统预装搜索。Typed Next Action 保留默认拒绝策略、最新 Observation 绑定、显式 Approval、统一 Step/Model/Action/Time Budget、精确验证、Stop 及重启失败即拒绝。一般目标完成必须具备所有者显式提供且不可变的 Activity/Text 完成条件；模型自行宣称完成无效。现有 Home 提交接入 Rust Runner，无 UI 重设计。生产 Provider 未配置时返回 MODEL_NOT_CONFIGURED，不调用模型或设备动作。Live 验收为 BLOCKED_MODEL_NOT_CONFIGURED；Full Autonomous M3 仍为 NOT_COMPLETE。M4、账户、外部 App、真钱与商业授权不在范围内。
-
-## Mobile Interaction 与数据采集 — 2026-10-02
-
-[Issue #14](https://github.com/Btkkgo/OrdinConn/issues/14) 在既有 Android Runtime 和 SQLite 上增加人工控制、本地保存的 `Observe → Interact → Observe → Diff → Extract → Data Object → Data Stream → Provenance` 闭环。数据链为 `Source → Observation → Extraction → Data Object → Insight → Plan → Action → Result`；本阶段实现到 **Data Object**，Insight/Plan 保留接口。Home 提供实际采集对象、元素检查与人工操作、确定性 Observation Context。敏感值在持久化前脱敏，确定性去重保留重复观察及原始证据。自动 fixture 验证与 **REAL MOBILE DATA ACQUISITION ACCEPTANCE = PASS**（2026-10-02，H1–H2 人工；H3–H7 用户明确授权 Codex 执行） 分开；生产动作沿用既有模拟器/Settings 安全范围。
-
-**初始实现阶段的历史记录：** M3 状态与历史、Provider、retry/backoff/deadline、Keychain 和保留的 App 均不变。自动真实 Android 动作 **0**；Codex 人工 Android 动作 **0**；真实 Provider 请求 **0**；签名验证 **0**；X Draft **NONE**。允许 Rust/frontend 编译；支持的包装器会执行 `codesign`，因此 macOS 验收打包 **NOT RUN / BLOCKED BY THE NO-SIGNING BOUNDARY**。参见[实现与人工验收](mobile/MOBILE_DATA_ACQUISITION.zh-CN.md)。
+**验收边界：**用户已决定本地配置密钥后再进行 Chat/视觉/托管 Agent 真实 API 验收。继续 UI、本地能力和适配器测试，不将 G2/G3 标记为完整通过。Windows 编译与交互/API 验收分别记录。参见[当前状态](CURRENT_STATUS.zh-CN.md)。

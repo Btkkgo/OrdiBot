@@ -1,5 +1,5 @@
 import { Fingerprint, ShieldCheck } from "lucide-react";
-import type { ApprovalRequestDto } from "@ordinconn/contracts";
+import type { ApprovalRequestDto } from "@ordibot/contracts";
 import type { Translator } from "../i18n";
 
 export function ApprovalsPage({ approvals, onApprove, t }: { approvals: ApprovalRequestDto[]; onApprove: (approval: ApprovalRequestDto) => Promise<void>; t: Translator }) {

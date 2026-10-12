@@ -1,6 +1,6 @@
 import {describe,it,expect} from "vitest";
 import {renderToStaticMarkup} from "react-dom/server";
-import type {MobileCollectionWorkspace,MobileDataObject} from "@ordinconn/contracts";
+import type {MobileCollectionWorkspace,MobileDataObject} from "@ordibot/contracts";
 import {filterMobileData,MobileDataStream,MobileObservationContext,MobileProvenanceDetail} from "./MobileCollectionPanels";
 import {createTranslator} from "../i18n";
 const collection:MobileCollectionWorkspace={observations:[],diffs:[],actions:[],dataObjects:[],lastExtractionCount:0,lastNewObjectCount:0};

@@ -1,4 +1,4 @@
-import type { Market, SignalCategory, SignalDto } from "@ordinconn/contracts";
+import type { Market, SignalCategory, SignalDto } from "@ordibot/contracts";
 import type { Translator } from "../i18n";
 import { SignalCard } from "../components/SignalCard";
 

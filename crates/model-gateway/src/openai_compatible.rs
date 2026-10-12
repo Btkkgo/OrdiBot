@@ -14,21 +14,60 @@ pub fn build_chat_request(
     if !capabilities.chat_completions {
         return Err(ModelError::UnsupportedCapability("chatCompletions"));
     }
+    let images: BTreeMap<usize, Vec<String>> = request
+        .context
+        .get("ordibot_images")
+        .map(|value| {
+            serde_json::from_str(value)
+                .map_err(|_| ModelError::MalformedResponse("invalid image context".into()))
+        })
+        .transpose()?
+        .unwrap_or_default();
+    if !images.is_empty() && !capabilities.vision {
+        return Err(ModelError::UnsupportedCapability("vision"));
+    }
+    if images.keys().any(|index| *index >= request.messages.len()) {
+        return Err(ModelError::MalformedResponse(
+            "invalid image message index".into(),
+        ));
+    }
     let messages: Vec<Value> = request
         .messages
         .iter()
-        .map(|message| {
-            json!({
+        .enumerate()
+        .map(|(index, message)| {
+            let content = if let Some(urls) = images.get(&index) {
+                if message.role != ModelRole::User
+                    || urls.is_empty()
+                    || urls.len() > 4
+                    || urls.iter().any(|url| {
+                        !url.starts_with("data:image/png;base64,") || url.len() > 12_000_000
+                    })
+                {
+                    return Err(ModelError::MalformedResponse(
+                        "invalid confirmed image attachment".into(),
+                    ));
+                }
+                let mut parts = vec![json!({"type":"text", "text":message.content})];
+                parts.extend(
+                    urls.iter()
+                        .map(|url| json!({"type":"image_url", "image_url":{"url":url}})),
+                );
+                Value::Array(parts)
+            } else {
+                json!(message.content)
+            };
+            Ok(json!({
                 "role": match message.role {
                     ModelRole::System => "system",
                     ModelRole::User => "user",
                     ModelRole::Assistant => "assistant",
                     ModelRole::Tool => "tool",
                 },
-                "content": message.content,
-            })
+                "content": content,
+            }))
         })
-        .collect();
+        .collect::<Result<_, ModelError>>()?;
     let mut body = json!({
         "model": request.model,
         "messages": messages,
@@ -520,14 +559,29 @@ impl ModelProviderAdapter for OpenAiCompatibleChatAdapter {
             .map_err(normalize_reqwest_error)?;
         let response = Self::validate_response(response).await?;
         let mut chunks = response.bytes_stream();
-        let mut buffer = String::new();
+        let mut buffer = Vec::new();
+        let mut received = 0usize;
         let mut normalizer = ChatStreamNormalizer::default();
 
         while let Some(chunk) = chunks.next().await {
             let bytes = chunk.map_err(normalize_reqwest_error)?;
-            buffer.push_str(&String::from_utf8_lossy(&bytes));
-            while let Some(newline) = buffer.find('\n') {
-                let line = buffer[..newline].trim().to_owned();
+            received = received.saturating_add(bytes.len());
+            if received
+                > request
+                    .max_response_bytes
+                    .unwrap_or(2_000_000)
+                    .clamp(1, 16_000_000)
+            {
+                return Err(ModelError::MalformedResponse(
+                    "stream exceeds response limit".into(),
+                ));
+            }
+            buffer.extend_from_slice(&bytes);
+            while let Some(newline) = buffer.iter().position(|b| *b == b'\n') {
+                let line = std::str::from_utf8(&buffer[..newline])
+                    .map_err(|_| ModelError::MalformedResponse("invalid streaming UTF-8".into()))?
+                    .trim()
+                    .to_owned();
                 buffer.drain(..=newline);
                 let Some(data) = line.strip_prefix("data:").map(str::trim) else {
                     continue;
@@ -548,8 +602,9 @@ impl ModelProviderAdapter for OpenAiCompatibleChatAdapter {
                 }
             }
         }
-        let _ = sender.send(ModelEvent::Completed).await;
-        Ok(())
+        Err(ModelError::MalformedResponse(
+            "stream ended without completion marker".into(),
+        ))
     }
 }
 

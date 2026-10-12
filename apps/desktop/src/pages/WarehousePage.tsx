@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { IntelligenceItemDto, MobileWorkspaceDto } from "@ordinconn/contracts";
+import type { IntelligenceItemDto, MobileWorkspaceDto } from "@ordibot/contracts";
 import type { Translator } from "../i18n";
 import { EmptyState, PageHeader } from "../components/WorkspaceUI";
 import { filterWarehouseItems, sourceLabel, type WarehouseFilter } from "./mobileIntelligence";
