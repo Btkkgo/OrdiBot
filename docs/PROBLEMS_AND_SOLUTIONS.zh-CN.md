@@ -277,3 +277,9 @@ Android native dump 在 idle/root 失败时可能正常返回但不生成 XML。
 ## 开发数据库迁移后旧冻结 bundle 启动 abort
 
 保留的 M3 可执行文件内嵌迁移 1–11，当前数据库已包含 12。SQLx 对旧文件返回 `VersionMissing(12)`，错误经 Tauri setup 传播为 SIGABRT。当前 `npm run desktop:dev` 可使用现有数据库正常启动。保留数据库与冻结 App，不跳过迁移校验。已补充临时数据库兼容性测试。替换 packaged app 与人工 H1 不属于本次恢复。[诊断](mobile/DESKTOP_STARTUP_DIAGNOSIS.zh-CN.md)。
+
+## 问题 011 — GitHub 自动合并身份未通过公开历史门
+
+M2 PR 的 29 项技术与行为检查已通过，但 GitHub 自动生成的 Merge Commit 使用了不符合 noreply 的 Author 与 Committer 元数据。原提交带有 GitHub 已验证签名，因此修改身份会使原签名失效。一次授权的替代提交使用仓库本地 noreply 身份；因没有现成签名配置，移除了旧签名。Tree、按顺序排列的 Parents、Message 与时间戳完全一致，`git diff` 为空。新的公开 `main` 通过可达历史身份预检。旧对象仍可从 GitHub 访问，PR #8 仍引用它；没有再次改写。
+
+长期修复是在合并前检查仓库本地身份、在 Push `main` 前后检查公开可达历史，并安装版本化 pre-push Hook。GitHub 自动生成的网页 Merge Commit 在身份行为完成独立验证前暂停使用。另一个独立 Worktree 中，原脱敏器误把 `.git` 指针文件当作公开内容扫描；排除该 Git 元数据文件并继续扫描普通文件后，完整仓库 Gate 恢复通过。这是修正扫描边界，不是绕过安全检查。

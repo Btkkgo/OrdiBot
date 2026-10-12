@@ -66,3 +66,7 @@ Codex 保留短时限失败路径断言和全部生产 Command Deadline，增加
 [Issue #14](https://github.com/Btkkgo/OrdinConn/issues/14) 在既有 Android Runtime 和 SQLite 上增加人工控制、本地保存的 `Observe → Interact → Observe → Diff → Extract → Data Object → Data Stream → Provenance` 闭环。数据链为 `Source → Observation → Extraction → Data Object → Insight → Plan → Action → Result`；本阶段实现到 **Data Object**，Insight/Plan 保留接口。Home 提供实际采集对象、元素检查与人工操作、确定性 Observation Context。敏感值在持久化前脱敏，确定性去重保留重复观察及原始证据。自动 fixture 验证与 **REAL MOBILE DATA ACQUISITION ACCEPTANCE = PASS**（2026-10-02，H1–H2 人工；H3–H7 用户明确授权 Codex 执行） 分开；生产动作沿用既有模拟器/Settings 安全范围。
 
 **初始实现阶段的历史记录：** M3 状态与历史、Provider、retry/backoff/deadline、Keychain 和保留的 App 均不变。自动真实 Android 动作 **0**；Codex 人工 Android 动作 **0**；真实 Provider 请求 **0**；签名验证 **0**；X Draft **NONE**。允许 Rust/frontend 编译；支持的包装器会执行 `codesign`，因此 macOS 验收打包 **NOT RUN / BLOCKED BY THE NO-SIGNING BOUNDARY**。参见[实现与人工验收](../mobile/MOBILE_DATA_ACQUISITION.zh-CN.md)。
+
+## Issue #7 — Merge 元数据也是验收的一部分
+
+已审查的 M2 Tree 未变，但首次公开合并仍未通过身份规则。正确证据是提交 Author/Committer 的合规分类及公开可达历史扫描，而不是 29 项已通过的行为检查。已验证签名不能复制到新身份：授权修复生成了未签名的 noreply Merge，Tree、Parents、Message 与时间戳一致。旧 GitHub 对象仍有缓存。后续阶段收尾必须经过合并前身份、Push 前历史及合并后历史门；仅靠账号 UI 设置不足。Worktree 的 `.git` 指针还暴露了扫描器边界问题，已用专项回归修正。

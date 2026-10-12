@@ -277,3 +277,9 @@ A new regression reproduced an approved final action completing its Goal after t
 ## Obsolete frozen bundle abort after development database migration
 
 The retained M3 executable embeds migrations 1–11; the current database includes 12. SQLx rejects the obsolete executable with `VersionMissing(12)`, propagated through Tauri setup into SIGABRT. Current `npm run desktop:dev` startup works with the existing database. Preserve the database and frozen app; do not bypass migration validation. Added a disposable-database compatibility test. Packaged replacement and human H1 remain outside this recovery. [Diagnosis](mobile/DESKTOP_STARTUP_DIAGNOSIS.md).
+
+## Problem 011 — GitHub-generated merge identity failed the public-history gate
+
+The M2 PR passed 29 technical and behavior checks, but its GitHub-generated merge commit used non-noreply Author and Committer metadata. The original commit had a verified GitHub signature, so changing its identity invalidated that signature. A single authorized replacement used repository-local noreply identity and removed the old signature because no existing signing setup was configured. The tree, ordered parents, message, and timestamps remained identical; `git diff` was empty. The new public `main` passed the reachable-history identity preflight. The old object remains GitHub-accessible and referenced by PR #8; no further rewrite was attempted.
+
+The permanent fix is a repository-local identity check before merging, a reachable public-history check before and after pushing `main`, and a versioned pre-push hook. GitHub-generated web merge commits are suspended pending independent identity validation. In a separate worktree, the existing sanitizer initially scanned the `.git` pointer file as public content; excluding that Git metadata file while continuing to scan ordinary files restored the full repository gate. This preserves the security check rather than bypassing it.
