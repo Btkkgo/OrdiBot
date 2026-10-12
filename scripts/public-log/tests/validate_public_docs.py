@@ -83,7 +83,7 @@ for heading in (
     require(heading in stage, f"CURRENT_STATUS missing {heading}")
 stage_zh = (ROOT / "docs" / "CURRENT_STATUS.zh-CN.md").read_text(encoding="utf-8")
 for status in (stage, stage_zh):
-    for marker in ("OrdiBot", "Issue #17", "NEEDS_VALIDATION", "OWNER DEFERRED", "NOT RUN", "89", "33"):
+    for marker in ("OrdiBot", "Issue #17", "NEEDS_VALIDATION", "OWNER DEFERRED", "NOT RUN", "89", "34"):
         require(marker in status, f"current OrdiBot status missing {marker}")
     require("M1.5 PASS" not in status, "retired mobile gate cannot be the current product stage")
 

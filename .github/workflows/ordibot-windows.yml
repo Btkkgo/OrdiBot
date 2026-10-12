@@ -1,9 +1,25 @@
 name: OrdiBot Windows build
 on:
   push:
-    branches: [codex/ordibot-v1]
+    branches: [codex/ordibot-v1, main]
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - 'crates/**'
+      - 'Cargo.*'
+      - 'package*.json'
+      - 'scripts/desktop/**'
+      - '.github/workflows/ordibot-windows.yml'
   pull_request:
     branches: [main]
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - 'crates/**'
+      - 'Cargo.*'
+      - 'package*.json'
+      - 'scripts/desktop/**'
+      - '.github/workflows/ordibot-windows.yml'
   workflow_dispatch:
 permissions:
   contents: read
@@ -24,7 +40,8 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-ordibot-cargo-${{ hashFiles('Cargo.lock') }}
+          # Tauri build outputs embed workspace paths; a repository rename must not restore them.
+          key: ${{ runner.os }}-${{ github.repository }}-ordibot-cargo-${{ hashFiles('Cargo.lock') }}
       - run: npm ci
       - run: npm test
       - run: npm run typecheck
