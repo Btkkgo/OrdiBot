@@ -2,7 +2,7 @@
 
 [English](CURRENT_STATUS.md) | [简体中文](CURRENT_STATUS.zh-CN.md)
 
-Updated 2026-10-12 · [Issue #17](https://github.com/Btkkgo/OrdiBot/issues/17) · local G1–G5 delivery and G6.1 appearance acceptance; **NEEDS_VALIDATION** for complete V1.
+Updated 2026-10-12 · [Issue #17](https://github.com/Btkkgo/OrdiBot/issues/17) · local G1–G5, G6.1 appearance and G6.2 platform validation; **NEEDS_VALIDATION** for complete V1.
 
 ## Implemented
 
@@ -28,9 +28,13 @@ Four surfaces (Hidden, Edge, Chat, Agent), left/right docking and remembered ver
 
 [Issue #20](https://github.com/Btkkgo/OrdiBot/issues/20): typed active-UI dictionaries (251 keys per language), 14px system typography with five scales, five accents/three backgrounds, live appearance preview/reset and compatible native fields are implemented and verified. **PASS:** 99 TypeScript / 37 Rust tests, typecheck, frontend/signed native build, actual Mac Chinese/English switching, all presets, 130% Chat/Agent/Settings layouts, real rejected-save error, reset, restart persistence and Edge regression. Original config values/histories/docking/window size matched the private recovery copy. Independent [branch](https://github.com/Btkkgo/OrdiBot/actions/runs/38236081002) and [PR Windows CI](https://github.com/Btkkgo/OrdiBot/actions/runs/38236236446) passed. Runtime receipt: `f5cb3fe`; [PR #21](https://github.com/Btkkgo/OrdiBot/pull/21). See [acceptance and native screenshots](ordibot/G6_1_ACCEPTANCE.md). Windows interactive fonts/context remain NOT VERIFIED; live services OWNER DEFERRED. No production call or new Agent capability. Full V1 remains NEEDS_VALIDATION.
 
+## G6.2 V1 validation and hardening
+
+[Issue #22](https://github.com/Btkkgo/OrdiBot/issues/22) · [PR #23](https://github.com/Btkkgo/OrdiBot/pull/23) independently records [Mac / Windows / Provider matrices](ordibot/G6_2_ACCEPTANCE.md). Fresh **PASS:** 99 TypeScript / 37 Rust, typecheck, signed Mac release rebuild and [Windows CI 38257016271](https://github.com/Btkkgo/OrdiBot/actions/runs/38257016271) at `350d2ca`. Runtime executable remains identical to G6.1 (`d3fa54b4…`); no product code/dependency/Agent feature change. Owner physically confirmed tray Hide/Open, Agent/Edge and Cmd+Shift+Space. After only the OrdiBot recording grant was refreshed and the owner added/enabled the exact package, actual current-binary preview/cancel/confirm/remove all passed without sending a message. Actual Chat 586×951 → Agent 1180×820 → Chat 586×951 and restart/default/docking restoration passed; original config, histories and Chat dimensions match the private backup. Native Close/Minimize needs physical confirmation; titles remain app-only. Windows 11 GUI is NOT RUN; live services are NOT RUN / OWNER DEFERRED. Production Provider calls: 0. Issue #17 remains open; delivery is through a PR, with no direct main change.
+
 ## Partial
 
-macOS passive awareness obtained real app names; window titles were unavailable in observed runs and degrade to app-only metadata. Reminder throttle/filter/dedup and metadata attachment boundaries have regression/source coverage; tray menu and global shortcut restoration are **NOT VERIFIED**. CUA synthetic shortcut attempts did not reopen Chat; no specific native cause was established, and Edge-click restore works. Windows GUI/context acceptance is **NOT RUN**. G6.1 active-UI language/appearance acceptance passed on Mac.
+macOS passive awareness obtains real app names; window titles remain unavailable in observed runs and degrade to app-only metadata. Reminder throttle/filter/dedup and metadata attachment boundaries have regression/source coverage. G6.2 tray and physical shortcut restoration are owner-operated/reported PASS; synthetic tool input did not establish a native defect. Native Window Close/Minimize physical confirmation remains NOT VERIFIED. Windows GUI/context acceptance is NOT RUN. G6.1 appearance acceptance remains unchanged.
 
 ## Blocked
 
@@ -42,7 +46,7 @@ Only documented hosted-computer task APIs qualify as native Agent integration. M
 
 ## Planned
 
-Address remaining native restoration and Windows 11 interactive gates with real platform evidence. The original main migration is complete. The supplemental UI revision has a verified release receipt, fresh Windows CI and actual current-binary screenshot acceptance. Documentation-only closeout reuses the verified runtime without rebuilding it.
+Finish native Close/Minimize, window-title and real Windows 11 GUI gates with platform evidence. The original main migration is complete. The supplemental UI revision has a verified release receipt, fresh Windows CI and actual current-binary screenshot acceptance. Documentation-only closeout reuses the verified runtime without rebuilding it.
 
 ## Not Started
 

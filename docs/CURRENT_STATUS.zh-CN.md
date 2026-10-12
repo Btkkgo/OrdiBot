@@ -2,7 +2,7 @@
 
 [English](CURRENT_STATUS.md) | [简体中文](CURRENT_STATUS.zh-CN.md)
 
-更新于 2026-10-12 · [Issue #17](https://github.com/Btkkgo/OrdiBot/issues/17) · G1–G5 本地交付及 G6.1 外观验收；完整 V1 仍为 **NEEDS_VALIDATION**。
+更新于 2026-10-12 · [Issue #17](https://github.com/Btkkgo/OrdiBot/issues/17) · G1–G5 本地交付、G6.1 外观及 G6.2 平台验证；完整 V1 仍为 **NEEDS_VALIDATION**。
 
 ## Implemented / 已实现
 
@@ -28,9 +28,13 @@ Hidden、Edge、Chat、Agent 四态，左右停靠与垂直位置记忆，可关
 
 [Issue #20](https://github.com/Btkkgo/OrdiBot/issues/20)：活跃界面类型安全字典（每种语言 251 键）、14px 系统字体与五档字号、五种强调色/三种背景、即时外观预览/重置及兼容原生字段已实现并验证。**PASS：**99 个 TypeScript / 37 个 Rust 测试、类型检查、前端/签名原生构建、真实 Mac 中英切换、全部预设、130% Chat/Agent/Settings 排版、真实保存拒绝错误、重置、重启持久化及 Edge 回归。与私有恢复副本比较，原配置值/历史/停靠/窗口尺寸一致。独立[分支](https://github.com/Btkkgo/OrdiBot/actions/runs/38236081002)及 [PR Windows CI](https://github.com/Btkkgo/OrdiBot/actions/runs/38236236446)通过。运行时构建记录为 `f5cb3fe`，[PR #21](https://github.com/Btkkgo/OrdiBot/pull/21)，详见[验收与原生截图](ordibot/G6_1_ACCEPTANCE.zh-CN.md)。Windows 实际字体/上下文仍 NOT VERIFIED，真实服务 OWNER DEFERRED，无生产调用或新增 Agent 能力，完整 V1 仍 NEEDS_VALIDATION。
 
+## G6.2 V1 验收与加固
+
+[Issue #22](https://github.com/Btkkgo/OrdiBot/issues/22) · [PR #23](https://github.com/Btkkgo/OrdiBot/pull/23) 独立记录 [Mac / Windows / Provider 矩阵](ordibot/G6_2_ACCEPTANCE.zh-CN.md)。新执行 **PASS：**99 TypeScript / 37 Rust、类型检查、签名 Mac release 重建，以及提交 350d2ca 的 [Windows CI 38257016271](https://github.com/Btkkgo/OrdiBot/actions/runs/38257016271)。程序仍与 G6.1 一致（d3fa54b4…），没有产品代码/依赖/Agent 能力变化。用户物理确认菜单栏隐藏/打开、Agent/Edge 和 Cmd+Shift+Space。仅刷新 OrdiBot 录屏条目，用户添加/开启确切包后，当前二进制预览/取消/确认/移除实际通过，没有发送消息。实际 Chat 586×951 → Agent 1180×820 → Chat 586×951、重启/默认/停靠恢复通过；原配置/历史/Chat 尺寸与私有副本一致。原生关闭/最小化待物理确认，标题仍退化为仅应用；Windows 11 GUI NOT RUN，真实服务 NOT RUN / OWNER DEFERRED，生产 Provider 调用 0。#17 保持开启，通过 PR 交付，不直接修改 main。
+
 ## Partial / 部分验证
 
-macOS 被动感知取得真实应用名；实测窗口标题未取得，降级为仅应用元数据。提醒节流/过滤/去重及元数据附件边界有回归/源码覆盖；菜单栏入口及全局快捷键恢复为 **NOT VERIFIED**。CUA 合成快捷键尝试未展开 Chat，尚无确定原生原因；点击 Edge 恢复可用。Windows 界面/上下文验收为 **NOT RUN**。G6.1 活跃界面语言/外观在 Mac 原生验收通过。
+macOS 被动感知取得真实应用名；实测窗口标题仍未取得，降级为仅应用元数据。提醒节流/过滤/去重及附件边界有回归/源码覆盖。G6.2 菜单栏及物理快捷键为用户操作/报告的 PASS；工具注入没有建立原生缺陷。原生 Window 关闭/最小化物理确认仍 NOT VERIFIED。Windows GUI/上下文 NOT RUN；G6.1 外观验收保持不变。
 
 ## Blocked / 暂缓
 
@@ -42,7 +46,7 @@ macOS 被动感知取得真实应用名；实测窗口标题未取得，降级�
 
 ## Planned / 后续
 
-用真实平台证据处理原生恢复及 Windows 11 交互验收。原主线迁移已完成。补充界面修订已有已验证的 release 构建记录、新 Windows CI 及当前二进制真实截图验收。纯文档收尾复用已验证的运行时，不再重新构建。
+用真实平台证据完成原生关闭/最小化、窗口标题与 Windows 11 GUI 验收。原主线迁移已完成。补充界面修订已有已验证的 release 构建记录、新 Windows CI 及当前二进制真实截图验收。纯文档收尾复用已验证的运行时，不再重新构建。
 
 ## Not Started / 未开始
 

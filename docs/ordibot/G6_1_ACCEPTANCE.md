@@ -33,3 +33,5 @@ No original OrdiBot store, OrdinConn backup, legacy credentials or independent r
 ![Chinese Chat at 130%](assets/g6-1-chat-zh-130.jpg)
 
 ![English Agent workspace at 130%](assets/g6-1-agent-en-130.jpg)
+
+Current-binary screenshot preview/cancel/confirm/remove was subsequently verified in [G6.2](G6_2_ACCEPTANCE.md); G6.1 historical evidence is unchanged.

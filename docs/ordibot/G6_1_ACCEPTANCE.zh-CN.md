@@ -33,3 +33,5 @@
 ![中文 Chat，130%](assets/g6-1-chat-zh-130.jpg)
 
 ![英文 Agent 工作台，130%](assets/g6-1-agent-en-130.jpg)
+
+当前二进制截图预览/取消/确认/移除随后在 [G6.2](G6_2_ACCEPTANCE.zh-CN.md) 实测通过；G6.1 历史证据保持不变。
