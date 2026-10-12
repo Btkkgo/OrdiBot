@@ -1,3 +1,4 @@
+use super::companion_credentials::remote_key_for;
 use super::companion_store::*;
 use futures_util::StreamExt;
 use serde_json::{Value, json};
@@ -5,6 +6,7 @@ use tauri::State;
 
 fn client() -> Result<reqwest::Client, String> {
     reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
         .timeout(std::time::Duration::from_secs(45))
         .build()
         .map_err(|_| "REMOTE_NETWORK_ERROR".into())
@@ -76,7 +78,8 @@ pub async fn remote_submit(
     if objective.trim().is_empty() || objective.len() > 20_000 {
         return Err("INVALID_TASK".into());
     }
-    let key = read_key(true)?.ok_or("REMOTE_KEY_NOT_CONFIGURED")?;
+    let key = remote_key_for(&*state.stored.lock().map_err(|_| "STATE_UNAVAILABLE")?)?
+        .ok_or("REMOTE_KEY_NOT_CONFIGURED")?;
     let model = state
         .stored
         .lock()
@@ -178,7 +181,8 @@ pub async fn remote_refresh(
     if !valid_id(&session) {
         return Err("INVALID_SESSION_ID".into());
     }
-    let key = read_key(true)?.ok_or("REMOTE_KEY_NOT_CONFIGURED")?;
+    let key = remote_key_for(&*state.stored.lock().map_err(|_| "STATE_UNAVAILABLE")?)?
+        .ok_or("REMOTE_KEY_NOT_CONFIGURED")?;
     let client = client()?;
     let s = request(
         &client,
@@ -258,7 +262,8 @@ pub async fn remote_control(
         .clone()
         .filter(|s| valid_id(s))
         .ok_or("REMOTE_SESSION_UNAVAILABLE")?;
-    let key = read_key(true)?.ok_or("REMOTE_KEY_NOT_CONFIGURED")?;
+    let key = remote_key_for(&*state.stored.lock().map_err(|_| "STATE_UNAVAILABLE")?)?
+        .ok_or("REMOTE_KEY_NOT_CONFIGURED")?;
     let client = client()?;
     match action.as_str() {
         "cancel" => {
@@ -316,6 +321,39 @@ pub async fn remote_control(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[tokio::test]
+    async fn authenticated_transport_does_not_follow_redirects() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let target = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let source = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let url = format!("http://{}", source.local_addr().unwrap());
+        let response = format!(
+            "HTTP/1.1 307 Temporary Redirect\r\nLocation: http://{}/other\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
+            target.local_addr().unwrap()
+        );
+        let server = tokio::spawn(async move {
+            let (mut socket, _) = source.accept().await.unwrap();
+            let mut bytes = [0; 2048];
+            socket.read(&mut bytes).await.unwrap();
+            socket.write_all(response.as_bytes()).await.unwrap();
+        });
+        // Transport fixture only; never invoke the remote task/session adapter.
+        let response = client()
+            .unwrap()
+            .get(url)
+            .bearer_auth("fixture-only-value")
+            .timeout(std::time::Duration::from_millis(500))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(response.status().as_u16(), 307);
+        server.await.unwrap();
+        assert!(
+            tokio::time::timeout(std::time::Duration::from_millis(50), target.accept())
+                .await
+                .is_err()
+        );
+    }
     #[test]
     fn idle_session_cannot_finish_a_task() {
         assert_eq!(

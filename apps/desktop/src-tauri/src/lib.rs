@@ -1,4 +1,5 @@
 mod companion_commands;
+mod companion_credentials;
 mod companion_menu;
 mod companion_platform;
 mod companion_presence;

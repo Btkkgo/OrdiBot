@@ -1,6 +1,6 @@
 use crate::{
-    ModelError, ModelEvent, ModelProviderAdapter, ModelRole, ProviderCapabilities,
-    UnifiedModelRequest,
+    ChatParameterPolicy, ModelEndpoint, ModelError, ModelEvent, ModelProviderAdapter, ModelRole,
+    ProviderCapabilities, UnifiedModelRequest,
 };
 use async_trait::async_trait;
 use futures_util::StreamExt;
@@ -71,8 +71,10 @@ pub fn build_chat_request(
     let mut body = json!({
         "model": request.model,
         "messages": messages,
-        "temperature": request.temperature,
     });
+    if request.parameter_policy == ChatParameterPolicy::Standard {
+        body["temperature"] = json!(request.temperature);
+    }
     if capabilities.tool_calling && !request.tools.is_empty() {
         body["tools"] = Value::Array(
             request
@@ -99,7 +101,12 @@ pub fn build_chat_request(
         }
     }
     if let Some(limit) = request.max_output_tokens {
-        body["max_tokens"] = json!(limit);
+        let field = if request.parameter_policy == ChatParameterPolicy::Completion {
+            "max_completion_tokens"
+        } else {
+            "max_tokens"
+        };
+        body[field] = json!(limit);
     }
     Ok(body)
 }
@@ -255,22 +262,27 @@ pub struct OpenAiCompatibleChatAdapter {
 impl OpenAiCompatibleChatAdapter {
     pub fn new(base_url: impl Into<String>, capabilities: ProviderCapabilities) -> Self {
         Self {
-            client: reqwest::Client::new(),
+            client: reqwest::Client::builder()
+                .redirect(reqwest::redirect::Policy::none())
+                .build()
+                .expect("static HTTP client configuration"),
             base_url: base_url.into().trim_end_matches('/').to_owned(),
             capabilities,
         }
     }
 
-    fn endpoint(&self) -> String {
-        format!("{}/chat/completions", self.base_url)
-    }
-
-    fn request_builder(&self, api_key: Option<&str>) -> reqwest::RequestBuilder {
-        let builder = self.client.post(self.endpoint());
-        if let Some(key) = api_key.filter(|key| !key.is_empty()) {
-            builder.bearer_auth(key)
+    fn request_builder(
+        &self,
+        api_key: Option<&str>,
+    ) -> Result<reqwest::RequestBuilder, ModelError> {
+        let endpoint = ModelEndpoint::parse(&self.base_url)?;
+        let builder = self
+            .client
+            .post(format!("{}/chat/completions", endpoint.canonical));
+        if let Some(key) = api_key.filter(|key| !key.is_empty() && !endpoint.local) {
+            Ok(builder.bearer_auth(key))
         } else {
-            builder
+            Ok(builder)
         }
     }
 
@@ -450,7 +462,7 @@ impl OpenAiCompatibleChatAdapter {
     ) -> Result<Vec<ModelEvent>, ModelError> {
         let body = build_chat_request(request, &self.capabilities)?;
         let response = self
-            .request_builder(api_key)
+            .request_builder(api_key)?
             .json(&body)
             .timeout(std::time::Duration::from_millis(
                 request.timeout_ms.unwrap_or(30_000).clamp(1, 120_000),
@@ -549,7 +561,7 @@ impl ModelProviderAdapter for OpenAiCompatibleChatAdapter {
         let mut body = build_chat_request(request, &self.capabilities)?;
         body["stream"] = Value::Bool(true);
         let response = self
-            .request_builder(api_key)
+            .request_builder(api_key)?
             .json(&body)
             .timeout(std::time::Duration::from_millis(
                 request.timeout_ms.unwrap_or(30_000).clamp(1, 120_000),
@@ -613,5 +625,46 @@ fn normalize_reqwest_error(error: reqwest::Error) -> ModelError {
         ModelError::Timeout
     } else {
         ModelError::Network(error.without_url().to_string())
+    }
+}
+
+#[cfg(test)]
+mod credential_transport_tests {
+    use super::*;
+    #[test]
+    fn authorization_is_cloud_only_for_all_supported_loopback_hosts() {
+        for url in [
+            "http://localhost:11434/v1",
+            "http://127.0.0.1:11434/v1",
+            "https://[::1]/v1",
+            "https://localhost/v1",
+        ] {
+            let adapter = OpenAiCompatibleChatAdapter::new(url, ProviderCapabilities::default());
+            let request = adapter
+                .request_builder(Some("fixture-only-value"))
+                .unwrap()
+                .build()
+                .unwrap();
+            assert!(
+                !request
+                    .headers()
+                    .contains_key(reqwest::header::AUTHORIZATION)
+            );
+        }
+        let adapter = OpenAiCompatibleChatAdapter::new(
+            "https://cloud.example/v1",
+            ProviderCapabilities::default(),
+        );
+        let request = adapter
+            .request_builder(Some("fixture-only-value"))
+            .unwrap()
+            .build()
+            .unwrap();
+        assert!(
+            request
+                .headers()
+                .contains_key(reqwest::header::AUTHORIZATION)
+        );
+        // Build only: no cloud connection is sent.
     }
 }

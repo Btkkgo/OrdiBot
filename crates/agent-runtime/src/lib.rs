@@ -43,6 +43,7 @@ pub fn build_contextual_request(
         values.insert("mobileSourceLocator".into(), source_locator.clone());
     }
     UnifiedModelRequest {
+        parameter_policy: Default::default(),
         structured_output: None,
         max_output_tokens: None,
         timeout_ms: None,

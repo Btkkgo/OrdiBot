@@ -56,8 +56,30 @@ export function ModelSettings({
   const field = <K extends keyof Config>(name: K, value: Config[K]) => {
     setSaved(false);
     setSaveError(null);
+    if (name === "provider" || name === "baseUrl") setKey("");
     setConfig((c) => ({ ...c, [name]: value }));
   };
+  const endpoint = (value: string) => {
+    try {
+      return new URL(value).href.replace(/\/+$/, "");
+    } catch {
+      return null;
+    }
+  };
+  const localEndpoint = (() => {
+    try {
+      const host = new URL(config.baseUrl).hostname;
+      return host.replace(/\.+$/, "") === "localhost" || host === "[::1]"
+        || /^127\.\d+\.\d+\.\d+$/.test(host)
+        || /^\[::ffff:7f[0-9a-f]{2}:[0-9a-f]{1,4}\]$/.test(host);
+    } catch {
+      return false;
+    }
+  })();
+  const keyAvailable = snapshot.keyPresent && !localEndpoint
+    && config.provider.trim().toLowerCase() === snapshot.data.config.provider.trim().toLowerCase()
+    && endpoint(config.baseUrl) !== null
+    && endpoint(config.baseUrl) === endpoint(snapshot.data.config.baseUrl);
   const appearanceField = <K extends keyof Appearance>(
     name: K,
     value: Appearance[K],
@@ -211,6 +233,7 @@ export function ModelSettings({
           {t("provider")}
           <input
             value={config.provider}
+            disabled={saving}
             onChange={(e) => field("provider", e.target.value)}
           />
         </label>
@@ -219,6 +242,7 @@ export function ModelSettings({
           <input
             value={config.baseUrl}
             spellCheck={false}
+            disabled={saving}
             onChange={(e) => field("baseUrl", e.target.value)}
             placeholder="https://api.openai.com/v1"
           />
@@ -228,6 +252,7 @@ export function ModelSettings({
           <input
             value={config.model}
             spellCheck={false}
+            disabled={saving}
             onChange={(e) => field("model", e.target.value)}
             placeholder={t("modelPlaceholder")}
           />
@@ -235,12 +260,13 @@ export function ModelSettings({
         <label>
           {t("apiKey")}{" "}
           <span className="muted">
-            {t(snapshot.keyPresent ? "keyStored" : "notConfigured")}
+            {t(keyAvailable ? "keyStored" : "notConfigured")}
           </span>
           <input
             type="password"
             autoComplete="off"
             value={key}
+            disabled={saving || localEndpoint}
             onChange={(e) => {
               setSaved(false);
               setKey(e.target.value);
@@ -252,6 +278,7 @@ export function ModelSettings({
           <input
             type="checkbox"
             checked={config.vision}
+            disabled={saving}
             onChange={(e) => field("vision", e.target.checked)}
           />
           {t("vision")}
@@ -264,9 +291,20 @@ export function ModelSettings({
             max={8192}
             step={256}
             value={config.outputLength}
+            disabled={saving}
             onChange={(e) => field("outputLength", Number(e.target.value))}
           />
         </label>
+        <label>
+          {t("modelParameters")}
+          <select value={config.modelParameters ?? "standard"} disabled={saving}
+            onChange={e=>field("modelParameters",e.target.value as Config["modelParameters"])}>
+            <option value="standard">{t("parameters.standard")}</option>
+            <option value="completion">{t("parameters.completion")}</option>
+            <option value="no-temperature">{t("parameters.noTemperature")}</option>
+          </select>
+        </label>
+        <p className="muted">{t("credentialBindingHint")}</p>
       </section>
       <section className="settings-section">
         <h2>
@@ -285,6 +323,7 @@ export function ModelSettings({
           {t("agentModelId")}
           <input
             value={config.remoteModel}
+            disabled={saving}
             onChange={(e) => field("remoteModel", e.target.value)}
           />
         </label>
@@ -297,6 +336,7 @@ export function ModelSettings({
             type="password"
             autoComplete="off"
             value={remoteKey}
+            disabled={saving}
             onChange={(e) => {
               setSaved(false);
               setRemoteKey(e.target.value);
@@ -311,6 +351,7 @@ export function ModelSettings({
           {t("answerStyle")}
           <select
             value={config.style}
+            disabled={saving}
             onChange={(e) => field("style", e.target.value as Config["style"])}
           >
             <option value="concise">{t("style.concise")}</option>
@@ -322,6 +363,7 @@ export function ModelSettings({
           <input
             type="checkbox"
             checked={config.alwaysOnTop}
+            disabled={saving}
             onChange={(e) => field("alwaysOnTop", e.target.checked)}
           />
           <Pin size={14} />
@@ -331,6 +373,7 @@ export function ModelSettings({
           <input
             type="checkbox"
             checked={config.contextReminders}
+            disabled={saving}
             onChange={(e) => field("contextReminders", e.target.checked)}
           />
           {t("contextReminders")}
@@ -339,6 +382,7 @@ export function ModelSettings({
           <input
             type="checkbox"
             checked={config.browsersEditorsOnly}
+            disabled={saving}
             onChange={(e) => field("browsersEditorsOnly", e.target.checked)}
           />
           {t("browsersEditorsOnly")}
@@ -347,6 +391,7 @@ export function ModelSettings({
           {t("petPosition")}
           <select
             value={config.edgeSide}
+            disabled={saving}
             onChange={(e) =>
               field("edgeSide", e.target.value as Config["edgeSide"])
             }
@@ -364,6 +409,7 @@ export function ModelSettings({
             min="0"
             max="100"
             value={Math.round(config.edgeVertical * 100)}
+            disabled={saving}
             onChange={(e) =>
               field("edgeVertical", Number(e.target.value) / 100)
             }

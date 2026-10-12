@@ -331,10 +331,7 @@ async fn minimal_chat_preserves_gemini_path_and_omits_optional_features() {
         head.to_ascii_lowercase()
             .contains("content-type: application/json")
     );
-    assert!(
-        head.to_ascii_lowercase()
-            .contains("authorization: bearer fixture-credential")
-    );
+    assert!(!head.to_ascii_lowercase().contains("authorization:"));
     let body: serde_json::Value = serde_json::from_str(body).unwrap();
     assert_eq!(body.as_object().unwrap().len(), 3);
     assert_eq!(body["model"], "gemini-3.6-flash");
