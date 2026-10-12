@@ -271,6 +271,29 @@ pub async fn chat_send(
     if failure.is_none() && (!completed || answer.trim().is_empty()) {
         failure = Some("INCOMPLETE_OR_EMPTY_RESPONSE".into());
     }
+    let result = finish_chat(&state, conversation, answer, failure);
+    let _ = on_event.send(ChatEvent {
+        kind: if result.is_err() {
+            "failed"
+        } else {
+            "completed"
+        }
+        .into(),
+        text: result.as_ref().err().cloned().unwrap_or_default(),
+        conversation_id: id,
+    });
+    result
+}
+fn finish_chat(
+    state: &CompanionState,
+    mut conversation: Conversation,
+    answer: String,
+    failure: Option<String>,
+) -> Result<Conversation, String> {
+    // Failed/cancelled turns stay in the composer for retry, never in normal history.
+    if let Some(f) = failure {
+        return Err(f);
+    }
     if !answer.is_empty() {
         conversation.messages.push(Message {
             role: "assistant".into(),
@@ -281,22 +304,13 @@ pub async fn chat_send(
     }
     {
         let mut stored = state.stored.lock().map_err(|_| "STATE_UNAVAILABLE")?;
-        stored.conversations.retain(|c| c.id != id);
+        let previous = stored.conversations.clone();
+        stored.conversations.retain(|c| c.id != conversation.id);
         stored.conversations.insert(0, conversation.clone());
-        state.persist(&stored)?;
-    }
-    let _ = on_event.send(ChatEvent {
-        kind: if failure.is_some() {
-            "failed"
-        } else {
-            "completed"
+        if let Err(error) = state.persist(&stored) {
+            stored.conversations = previous;
+            return Err(error);
         }
-        .into(),
-        text: failure.clone().unwrap_or_default(),
-        conversation_id: id,
-    });
-    if let Some(f) = failure {
-        return Err(f);
     }
     Ok(conversation)
 }
@@ -378,6 +392,41 @@ pub fn open_service(service: String) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn failed_partial_turn_is_not_history_and_retry_keeps_one_user_turn() {
+        for error in ["GENERATION_CANCELLED", "TIMEOUT", "RATE_LIMITED"] {
+            let dir = tempfile::tempdir().unwrap();
+            let state = CompanionState::load(dir.path().join("history.json")).unwrap();
+            let turn = Conversation {
+                id: "retry".into(),
+                title: "question".into(),
+                messages: vec![Message {
+                    role: "user".into(),
+                    content: "question".into(),
+                    created_at: now(),
+                    images: vec![],
+                }],
+            };
+            assert!(
+                finish_chat(
+                    &state,
+                    turn.clone(),
+                    "unfinished".into(),
+                    Some(error.into())
+                )
+                .is_err()
+            );
+            assert!(state.stored.lock().unwrap().conversations.is_empty());
+            assert!(!state.file.exists());
+            let retry = finish_chat(&state, turn, "complete".into(), None).unwrap();
+            assert_eq!(retry.messages.len(), 2);
+            let restored = CompanionState::load(state.file.clone()).unwrap();
+            let stored = restored.stored.lock().unwrap();
+            assert_eq!(stored.conversations[0].messages.len(), 2);
+            assert_eq!(stored.conversations[0].messages[1].content, "complete");
+        }
+    }
 
     #[test]
     fn restored_screenshot_history_does_not_claim_pixels_are_available() {

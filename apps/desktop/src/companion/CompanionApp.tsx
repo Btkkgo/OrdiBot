@@ -263,6 +263,7 @@ export function CompanionApp() {
     setError("");
     setRetryText("");
     const previous = conversation;
+    let turnConversationId = previous?.id;
     const local: Conversation = previous ?? {
       id: "",
       title: text,
@@ -282,8 +283,10 @@ export function CompanionApp() {
       conversationId: string;
     }>();
     channel.onmessage = (e) => {
-      if (e.kind === "started")
+      if (e.kind === "started") {
+        turnConversationId = e.conversationId;
         setConversation((c) => (c ? { ...c, id: e.conversationId } : c));
+      }
       if (e.kind === "delta") setDraft((s) => s + e.text);
     };
     try {
@@ -302,8 +305,7 @@ export function CompanionApp() {
       try {
         const s = await refresh();
         const persisted =
-          s.data.conversations.find((c) => c.id === previous?.id) ||
-          s.data.conversations.find((c) => c.title === text.slice(0, 36));
+          s.data.conversations.find((c) => c.id === turnConversationId);
         if (persisted) setConversation(persisted);
         else setConversation(previous);
       } catch {

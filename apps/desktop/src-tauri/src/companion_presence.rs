@@ -104,7 +104,7 @@ fn browser_or_editor(app: &str) -> bool {
     ]
     .iter()
     .any(|name| app.contains(name))
-        || matches!(app.as_str(), "code" | "arc" | "cursor" | "zed")
+        || matches!(app.as_str(), "code" | "arc" | "cursor" | "zed" | "msedge")
 }
 
 #[cfg(test)]
@@ -151,6 +151,7 @@ mod tests {
     fn browser_editor_filter_and_self_exclusion_are_explicit() {
         assert!(browser_or_editor("Google Chrome"));
         assert!(browser_or_editor("Code"));
+        assert!(browser_or_editor("msedge"));
         assert!(!browser_or_editor("Preview"));
         assert!(!browser_or_editor("Archive Utility"));
         let mut t = ReminderTracker::default();
