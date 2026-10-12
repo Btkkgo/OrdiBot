@@ -2,7 +2,7 @@
 
 [English](G7_1A_ACCEPTANCE.md) | [简体中文](G7_1A_ACCEPTANCE.zh-CN.md)
 
-2026-10-12 · [Issue #24](https://github.com/Btkkgo/OrdiBot/issues/24)。基于 main `061d217`；[G6.2 PR #23](https://github.com/Btkkgo/OrdiBot/pull/23) 仍为 OPEN、未合并，不视为 main 已验证证据。Issue #17、#22 保持 OPEN。
+2026-10-12 · [Issue #24](https://github.com/Btkkgo/OrdiBot/issues/24) · [PR #25](https://github.com/Btkkgo/OrdiBot/pull/25)。基于 main `061d217`；[G6.2 PR #23](https://github.com/Btkkgo/OrdiBot/pull/23) 仍为 OPEN、未合并，不视为 main 已验证证据。Issue #17、#22 保持 OPEN。
 
 ## 安全修复
 
@@ -27,8 +27,8 @@
 | 保留源码兼容 | PASS | cargo check --locked -p agent-runtime -p ordinconn-app --offline；仅编译，不启动旧运行时。 |
 | 类型检查 | PASS | npm run typecheck。 |
 | 独立审查 | PASS | 安全及兼容问题修复后复核，无剩余阻塞项。 |
-| Mac 原生构建/签名 | NOT RUN | 等待当前分支构建。 |
-| Windows 独立 CI | NOT RUN | 等待当前分支运行；CI 不等于 GUI 验收。 |
+| Mac 原生构建/签名 | PASS | c5a204e 的 npm run desktop:build：前端/原生 release 包、源码指纹稳定及本地严格签名校验通过。 |
+| Windows 独立 CI | PASS | c5a204e 的[分支运行](https://github.com/Btkkgo/OrdiBot/actions/runs/38269809980)和 [PR 运行](https://github.com/Btkkgo/OrdiBot/actions/runs/38269996025)：105 项 TypeScript / 47 项 Rust、类型检查、原生 NSIS 构建和上传通过。CI 不等于 GUI 验收。 |
 | 新二进制 Mac GUI / 原生凭据操作 | NOT RUN | 本轮保护既有凭据，未执行；原有 G6.1 证据保持历史边界。 |
 | Windows 11 GUI | NOT RUN | 未使用真实 Windows GUI。 |
 | 真实 Chat / Vision / Remote Agent | NOT RUN / OWNER DEFERRED | 生产 Provider 调用 **0**；也未请求真实 Ollama 或执行远程任务。 |
@@ -38,3 +38,7 @@
 ## G7.1B 所需授权
 
 需用户明确批准 Provider、完整端点、模型及限定真实测试范围。Key 仅在本地输入，不发送到聊天或公开记录。云端调用前批准请求数、token 及费用上限，并核实现行价格和账户能力。本地 Ollama 也需要明确测试授权。Chat 授权不包含截图/Vision、Remote Agent、权限变更或合并 PR；流式取消仍可能产生服务端计费。本任务在这些操作前停止。
+
+## 原生构建凭据
+
+Mac arm64 构建基线 `c5a204e`，时间 2026-10-12T15:24:19Z。程序 SHA-256：`aa5f87f6ec9d284d0ea86a950f570aa9edb0d4f46f54cb91e829ec10921df9b8`；源码指纹：`42325cb0a79be6bb3973f0fd3e2857b588745d4b3fa0cb80b7fac080de9b2ff5`。应用包：target/release/bundle/macos/OrdiBot.app。构建前已退出旧进程；未启动新包、未修改录屏权限。既有 STATIC_VCRUNTIME 废弃警告不影响成功，与本补丁无关。后续仅文档收尾复用此程序。

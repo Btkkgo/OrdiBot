@@ -2,7 +2,7 @@
 
 [English](G7_1A_ACCEPTANCE.md) | [简体中文](G7_1A_ACCEPTANCE.zh-CN.md)
 
-2026-10-12 · [Issue #24](https://github.com/Btkkgo/OrdiBot/issues/24). Based on main `061d217`; [G6.2 PR #23](https://github.com/Btkkgo/OrdiBot/pull/23) is OPEN, unmerged, and is not included as verified main evidence. Issues #17 and #22 remain OPEN.
+2026-10-12 · [Issue #24](https://github.com/Btkkgo/OrdiBot/issues/24) · [PR #25](https://github.com/Btkkgo/OrdiBot/pull/25). Based on main `061d217`; [G6.2 PR #23](https://github.com/Btkkgo/OrdiBot/pull/23) is OPEN, unmerged, and is not included as verified main evidence. Issues #17 and #22 remain OPEN.
 
 ## Security changes
 
@@ -27,8 +27,8 @@
 | Retained source compatibility | PASS | `cargo check --locked -p agent-runtime -p ordinconn-app --offline`; compile-only, no retired runtime launched. |
 | Typecheck | PASS | `npm run typecheck`. |
 | Independent review | PASS | Security/compatibility findings fixed and reviewed again; no remaining blocking finding. |
-| Mac native build/signature | NOT RUN | Pending current branch build. |
-| Windows independent CI | NOT RUN | Pending current branch run. CI is distinct from GUI acceptance. |
+| Mac native build/signature | PASS | npm run desktop:build at c5a204e; frontend/release bundle, stable source fingerprint and ad-hoc strict signature verification passed. |
+| Windows independent CI | PASS | [Branch run](https://github.com/Btkkgo/OrdiBot/actions/runs/38269809980) and [PR run](https://github.com/Btkkgo/OrdiBot/actions/runs/38269996025) at c5a204e: 105 TypeScript / 47 Rust, typecheck, native NSIS build and installer upload. CI is distinct from GUI acceptance. |
 | New-binary Mac GUI / native Keychain operations | NOT RUN | Not exercised in this credential-preserving foundation task; earlier G6.1 evidence remains historical. |
 | Windows 11 GUI | NOT RUN | No real Windows GUI used. |
 | Real Chat / Vision / Remote Agent | NOT RUN / OWNER DEFERRED | Production Provider calls: **0**. No Ollama request or remote task was sent either. |
@@ -38,3 +38,7 @@ No dependencies, old databases, backups, histories, original character artwork o
 ## G7.1B authorization required
 
 Owner approval must name the Provider, exact endpoint, model and bounded live test scope. Keys must be entered locally, never sent in chat or public records. Approve a request/token/spend cap before cloud calls; account pricing and capabilities need current verification. Local Ollama acceptance requires explicit approval too. Chat-only approval does not authorize screenshots/Vision, Remote Agent, permission changes or merging this PR. Streaming/cancellation may still incur billed server work. This task stops before these operations.
+
+## Native build receipt
+
+Verified Mac arm64 build at `c5a204e`, 2026-10-12T15:24:19Z. Executable SHA-256: `aa5f87f6ec9d284d0ea86a950f570aa9edb0d4f46f54cb91e829ec10921df9b8`; source fingerprint: `42325cb0a79be6bb3973f0fd3e2857b588745d4b3fa0cb80b7fac080de9b2ff5`. Bundle: `target/release/bundle/macos/OrdiBot.app`. The old process was quit before building; the new package was not launched and no recording permissions changed. The existing STATIC_VCRUNTIME deprecation warning is nonfatal and unrelated to this patch. Subsequent documentation-only closeout reuses this executable.

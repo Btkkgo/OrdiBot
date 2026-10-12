@@ -54,6 +54,6 @@ Windows 11 交互/上下文/API 与真实生产服务验收。商业签名/公�
 
 ## G7.1A 安全 Model Gateway 基础
 
-[Issue #24](https://github.com/Btkkgo/OrdiBot/issues/24)：已实现 Provider/完整端点凭据绑定及安全存储可信身份信封、不可变槽暂存与原子配置提交、本地 Chat 无凭据、禁止重定向和显式参数策略。**PASS**：105 项 TypeScript / 47 项活跃 Rust 测试、类型检查、保留源码编译兼容和独立审查。Mac 原生构建及独立 Windows CI 待执行。详见 [G7.1A 矩阵](ordibot/G7_1A_ACCEPTANCE.zh-CN.md)。旧共享 Chat Key 保留但需主动重新输入；本轮未打开或修改既有凭据和用户数据。生产调用 **0**；真实 Chat/Vision/Remote Agent **NOT RUN / OWNER DEFERRED**。
+[Issue #24](https://github.com/Btkkgo/OrdiBot/issues/24)：已实现 Provider/完整端点凭据绑定及安全存储可信身份信封、不可变槽暂存与原子配置提交、本地 Chat 无凭据、禁止重定向和显式参数策略。**PASS**：105 项 TypeScript / 47 项活跃 Rust 测试、类型检查、保留源码编译兼容和独立审查。Mac 原生 release/签名在 `c5a204e` 上 PASS；同一代码提交的独立 Windows [分支](https://github.com/Btkkgo/OrdiBot/actions/runs/38269809980) / [PR CI](https://github.com/Btkkgo/OrdiBot/actions/runs/38269996025) 均 PASS。[PR #25](https://github.com/Btkkgo/OrdiBot/pull/25) 为 OPEN。详见 [G7.1A 矩阵](ordibot/G7_1A_ACCEPTANCE.zh-CN.md)。旧共享 Chat Key 保留但需主动重新输入；本轮未打开或修改既有凭据和用户数据。生产调用 **0**；真实 Chat/Vision/Remote Agent **NOT RUN / OWNER DEFERRED**。
 
-本分支起点为 main `061d217`。[G6.2 PR #23](https://github.com/Btkkgo/OrdiBot/pull/23) 仍 OPEN，未自动合并，其原生证据保持独立。Issue #17、#22 保持 OPEN。Windows GUI 及新程序 GUI/系统凭据验收 NOT RUN。下一步：完成构建/CI、提交独立 PR；真实调用等待明确 G7.1B 批准。
+本分支起点为 main `061d217`。[G6.2 PR #23](https://github.com/Btkkgo/OrdiBot/pull/23) 仍 OPEN，未自动合并，其原生证据保持独立。Issue #17、#22 保持 OPEN。Windows GUI 及新程序 GUI/系统凭据验收 NOT RUN。下一步：审核独立 PR；真实调用等待明确 G7.1B 批准。不自动合并或真实测试。
