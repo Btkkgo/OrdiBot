@@ -2,7 +2,7 @@
 
 [English](G6_2_ACCEPTANCE.md) | [简体中文](G6_2_ACCEPTANCE.zh-CN.md)
 
-2026-10-12 · [#22](https://github.com/Btkkgo/OrdiBot/issues/22) · parent [#17](https://github.com/Btkkgo/OrdiBot/issues/17) remains open. Base: main `061d217`. This is a validation task, not full V1 acceptance.
+2026-10-12 · [PR #23](https://github.com/Btkkgo/OrdiBot/pull/23) · [#22](https://github.com/Btkkgo/OrdiBot/issues/22) · parent [#17](https://github.com/Btkkgo/OrdiBot/issues/17) remains open. Base: main `061d217`. This is a validation task, not full V1 acceptance.
 
 ## Result vocabulary
 
@@ -53,3 +53,5 @@ Parent #17 remains NEEDS_VALIDATION and open: real Windows 11 GUI/context, live 
 ![Restored default Chinese Chat](assets/g6-2-chat-restored.jpg)
 
 ![Default Chinese Agent workspace](assets/g6-2-agent.jpg)
+
+The pre-existing native store has 0 conversations/0 tasks and compares equal afterward. Nonempty history preservation remains G6.1 fixture evidence; no synthetic native records were created for acceptance.

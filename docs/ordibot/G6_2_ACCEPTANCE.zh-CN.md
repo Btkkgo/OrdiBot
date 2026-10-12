@@ -2,7 +2,7 @@
 
 [English](G6_2_ACCEPTANCE.md) | [简体中文](G6_2_ACCEPTANCE.zh-CN.md)
 
-2026-10-12 · [#22](https://github.com/Btkkgo/OrdiBot/issues/22) · 父 [#17](https://github.com/Btkkgo/OrdiBot/issues/17) 保持开启。基线 main `061d217`。本轮是验证任务，不代表完整 V1 通过。
+2026-10-12 · [PR #23](https://github.com/Btkkgo/OrdiBot/pull/23) · [#22](https://github.com/Btkkgo/OrdiBot/issues/22) · 父 [#17](https://github.com/Btkkgo/OrdiBot/issues/17) 保持开启。基线 main `061d217`。本轮是验证任务，不代表完整 V1 通过。
 
 ## 结果定义
 
@@ -53,3 +53,5 @@ PASS：实际执行通过。FAIL：实际执行未达标准。NOT VERIFIED：已
 ![恢复的中文默认 Chat](assets/g6-2-chat-restored.jpg)
 
 ![中文默认 Agent 工作台](assets/g6-2-agent.jpg)
+
+本机原有存储为 0 条对话/0 个任务，前后相等；非空历史保留由 G6.1 fixture 测试覆盖，未为验收创建虚假原生历史。

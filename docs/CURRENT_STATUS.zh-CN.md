@@ -30,7 +30,7 @@ Hidden、Edge、Chat、Agent 四态，左右停靠与垂直位置记忆，可关
 
 ## G6.2 V1 验收与加固
 
-[Issue #22](https://github.com/Btkkgo/OrdiBot/issues/22) 独立记录 [Mac / Windows / Provider 矩阵](ordibot/G6_2_ACCEPTANCE.zh-CN.md)。新执行 **PASS：**99 TypeScript / 37 Rust、类型检查、签名 Mac release 重建，以及提交 350d2ca 的 [Windows CI 38257016271](https://github.com/Btkkgo/OrdiBot/actions/runs/38257016271)。程序仍与 G6.1 一致（d3fa54b4…），没有产品代码/依赖/Agent 能力变化。用户物理确认菜单栏隐藏/打开、Agent/Edge 和 Cmd+Shift+Space。仅刷新 OrdiBot 录屏条目，用户添加/开启确切包后，当前二进制预览/取消/确认/移除实际通过，没有发送消息。实际 Chat 586×951 → Agent 1180×820 → Chat 586×951、重启/默认/停靠恢复通过；原配置/历史/Chat 尺寸与私有副本一致。原生关闭/最小化待物理确认，标题仍退化为仅应用；Windows 11 GUI NOT RUN，真实服务 NOT RUN / OWNER DEFERRED，生产 Provider 调用 0。#17 保持开启，通过 PR 交付，不直接修改 main。
+[Issue #22](https://github.com/Btkkgo/OrdiBot/issues/22) · [PR #23](https://github.com/Btkkgo/OrdiBot/pull/23) 独立记录 [Mac / Windows / Provider 矩阵](ordibot/G6_2_ACCEPTANCE.zh-CN.md)。新执行 **PASS：**99 TypeScript / 37 Rust、类型检查、签名 Mac release 重建，以及提交 350d2ca 的 [Windows CI 38257016271](https://github.com/Btkkgo/OrdiBot/actions/runs/38257016271)。程序仍与 G6.1 一致（d3fa54b4…），没有产品代码/依赖/Agent 能力变化。用户物理确认菜单栏隐藏/打开、Agent/Edge 和 Cmd+Shift+Space。仅刷新 OrdiBot 录屏条目，用户添加/开启确切包后，当前二进制预览/取消/确认/移除实际通过，没有发送消息。实际 Chat 586×951 → Agent 1180×820 → Chat 586×951、重启/默认/停靠恢复通过；原配置/历史/Chat 尺寸与私有副本一致。原生关闭/最小化待物理确认，标题仍退化为仅应用；Windows 11 GUI NOT RUN，真实服务 NOT RUN / OWNER DEFERRED，生产 Provider 调用 0。#17 保持开启，通过 PR 交付，不直接修改 main。
 
 ## Partial / 部分验证
 
