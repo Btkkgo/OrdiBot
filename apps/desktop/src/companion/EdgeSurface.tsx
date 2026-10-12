@@ -51,7 +51,7 @@ export function EdgeSurface() {
           if (e.detail === 0) action("chat");
         }}
       >
-        <Character />
+        <Character headOnly />
         <span className="edge-ready-dot" />
       </button>
       {presence.reminder && presence.remindersEnabled ? (

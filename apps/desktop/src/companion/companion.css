@@ -138,6 +138,11 @@ h3 {
   align-items: center;
   justify-content: center;
   cursor: grab;
+  position: relative;
+}
+.character-zone .orbit-character {
+  position: absolute;
+  top: calc((100% - 69px) * var(--dock-vertical, 0.5));
 }
 .orbit-character {
   width: 58px;
@@ -1198,12 +1203,14 @@ h3 {
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
+  padding: 0;
+  align-items: flex-start;
 }
 .edge-pet .orbit-character {
-  width: 58px;
-  height: 69px;
+  width: 56px;
+  height: 57px;
   pointer-events: none;
-  transform: translate(-9px, 9px);
+  transform: translate(-12px, 3px);
 }
 .edge-ready-dot {
   width: 5px;
@@ -1220,11 +1227,41 @@ h3 {
   flex-direction: row-reverse;
 }
 .edge-surface.dock-right .orbit-character {
-  transform: translate(9px, 9px) scaleX(-1);
+  transform: translate(12px, 3px) scaleX(-1);
 }
 .edge-surface.dock-right .edge-ready-dot {
   right: auto;
   left: 5px;
+}
+.attached-context-guide {
+  padding: 12px 14px;
+  margin: 0 0 10px;
+  border: 1px solid #48404f;
+  border-radius: 13px;
+  background: #b598eb0a;
+}
+.attached-context-guide strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  font-weight: 500;
+}
+.attached-context-guide p {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 6px 0 8px;
+}
+.attached-context-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.attached-context-actions button {
+  border: 1px solid #48404f;
+  border-radius: 7px;
+  padding: 6px 9px;
+  font-size: 11px;
+  color: var(--accent);
 }
 .edge-reminder {
   width: 266px;

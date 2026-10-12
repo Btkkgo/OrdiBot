@@ -1,9 +1,9 @@
 /** Original OrdiBot "Orbit" character. Drawn for this app, no reference artwork reused. */
-export function Character() {
+export function Character({ headOnly = false }: { headOnly?: boolean }) {
   return (
     <svg
       className="orbit-character"
-      viewBox="0 0 64 76"
+      viewBox={headOnly ? "8 0 50 51" : "0 0 64 76"}
       role="img"
       aria-label="OrdiBot 原创小角色 Orbit"
     >

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { invoke, Channel, isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import {
@@ -70,6 +70,8 @@ export function CompanionApp() {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [preview, setPreview] = useState("");
   const [context, setContext] = useState<DesktopContext>();
+  const [attachedContext, setAttachedContext] = useState<DesktopContext>();
+  const [focusContextInput, setFocusContextInput] = useState(false);
   const [reminder, setReminder] = useState<DesktopContext | null>(null);
   const drag = useSurfaceDrag(undefined, (e) => setError(displayError(e)));
   const [taskId, setTaskId] = useState<string>();
@@ -77,6 +79,7 @@ export function CompanionApp() {
   const [loading, setLoading] = useState(true);
   const [retryText, setRetryText] = useState("");
   const bottom = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const running = useRef(false);
   const pollBusy = useRef(false);
   const refresh = useCallback(async () => {
@@ -167,6 +170,8 @@ export function CompanionApp() {
     }).then(retain);
     void listen<DesktopContext>("ordibot:context-accepted", (e) => {
       setContext(e.payload);
+      setAttachedContext(e.payload);
+      setFocusContextInput(true);
       setAttachments((a) => [
         ...a.filter((v) => v.kind !== "app"),
         {
@@ -181,6 +186,12 @@ export function CompanionApp() {
       stops.forEach((fn) => fn());
     };
   }, []);
+  useEffect(() => {
+    if (focusContextInput && page === "chat" && !busy) {
+      inputRef.current?.focus({ preventScroll: true });
+      setFocusContextInput(false);
+    }
+  }, [focusContextInput, page, busy]);
   useEffect(() => {
     try {
       localStorage.setItem("ordibot.chatDraft", input);
@@ -241,6 +252,7 @@ export function CompanionApp() {
         const c = await invoke<DesktopContext>("desktop_context");
         setContext(c);
         if (!c.available) throw "CONTEXT_UNAVAILABLE";
+        setAttachedContext(c);
         return `${c.app}\n${c.window}\nCaptured: ${c.capturedAt}`;
       });
       if (value) {
@@ -341,6 +353,7 @@ export function CompanionApp() {
   return (
     <div
       className={`companion-container dock-${snapshot.data.config.edgeSide} ${page === "agent" ? "agent-mode" : ""}`}
+      style={{ "--dock-vertical": snapshot.data.config.edgeVertical } as CSSProperties}
     >
       {page !== "agent" ? (
         <aside className="character-zone" {...drag}>
@@ -710,6 +723,35 @@ export function CompanionApp() {
                   <div ref={bottom} />
                 </div>
                 <div className="chat-bottom">
+                  {attachedContext &&
+                  attachments.some((a) => a.kind === "app") &&
+                  !attachments.some((a) => a.kind !== "app") ? (
+                    <div className="attached-context-guide">
+                      <strong>
+                        已附加：{attachedContext.app}
+                        {attachedContext.window
+                          ? ` · ${attachedContext.window}`
+                          : ""}
+                      </strong>
+                      <p>
+                        目前仅有应用/标题。总结、翻译或检查正文时，请主动附加文字或截图。
+                      </p>
+                      <div className="attached-context-actions">
+                        <button
+                          disabled={contextBusy || busy}
+                          onClick={() => void attach("clipboard")}
+                        >
+                          <Clipboard size={13} /> 附加复制的文字
+                        </button>
+                        <button
+                          disabled={contextBusy || busy}
+                          onClick={() => void attach("screen")}
+                        >
+                          <ImagePlus size={13} /> 截图并确认
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
                   {attachments.length > 0 ? (
                     <div className="attachments">
                       {attachments.map((a, i) => (
@@ -751,6 +793,7 @@ export function CompanionApp() {
                   ) : null}
                   <div className="composer">
                     <textarea
+                      ref={inputRef}
                       aria-label="消息输入"
                       value={input}
                       rows={1}
