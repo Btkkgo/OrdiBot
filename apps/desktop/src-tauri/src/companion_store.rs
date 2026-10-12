@@ -12,6 +12,7 @@ pub struct Config {
     pub model: String,
     pub vision: bool,
     pub output_length: u32,
+    pub model_parameters: model_gateway::ChatParameterPolicy,
     pub style: String,
     pub always_on_top: bool,
     pub remote_model: String,
@@ -32,6 +33,7 @@ impl Default for Config {
             model: String::new(),
             vision: false,
             output_length: 1024,
+            model_parameters: Default::default(),
             style: "concise".into(),
             always_on_top: true,
             remote_model: "gpt-6-astra".into(),
@@ -61,16 +63,12 @@ impl Config {
         {
             return Err("INVALID_APPEARANCE_SETTINGS".into());
         }
-        let url = reqwest::Url::parse(&self.base_url).map_err(|_| "INVALID_BASE_URL")?;
-        if (url.scheme() != "https"
-            && !(url.scheme() == "http"
-                && matches!(url.host_str(), Some("localhost" | "127.0.0.1" | "[::1]"))))
-            || !url.username().is_empty()
-            || url.password().is_some()
-            || url.query().is_some()
-            || url.fragment().is_some()
+        model_gateway::ModelEndpoint::parse(&self.base_url).map_err(|_| "INVALID_BASE_URL")?;
+        if self.provider.trim().is_empty()
+            || self.provider.len() > 200
+            || self.provider.chars().any(char::is_control)
         {
-            return Err("INVALID_BASE_URL".into());
+            return Err("INVALID_MODEL_SETTINGS".into());
         }
         if self.model.len() > 200
             || !(256..=8192).contains(&self.output_length)
@@ -129,6 +127,8 @@ pub struct Stored {
     pub conversations: Vec<Conversation>,
     pub tasks: Vec<RemoteTask>,
     pub chat_geometry: Option<Geometry>,
+    pub chat_credential: Option<super::companion_credentials::ChatCredential>,
+    pub remote_credential: Option<String>,
 }
 pub struct CompanionState {
     pub file: PathBuf,
@@ -188,7 +188,230 @@ pub fn now() -> String {
 
 #[cfg(test)]
 mod tests {
+    use super::super::companion_credentials::{CredentialVault, chat_key_for, save_settings};
     use super::*;
+    use std::cell::{Cell, RefCell};
+    struct FixtureVault {
+        values: RefCell<std::collections::BTreeMap<String, String>>,
+        fail: Cell<bool>,
+        fail_remote: Cell<bool>,
+        reads: Cell<usize>,
+    }
+    impl FixtureVault {
+        fn new() -> Self {
+            Self {
+                values: RefCell::new(Default::default()),
+                fail: Cell::new(false),
+                fail_remote: Cell::new(false),
+                reads: Cell::new(0),
+            }
+        }
+    }
+    impl CredentialVault for FixtureVault {
+        fn write_new(&self, account: &str, value: &str) -> Result<(), String> {
+            if self.fail.get() || (self.fail_remote.get() && account.starts_with("remote-v2-")) {
+                return Err("SECURE_STORAGE_UNAVAILABLE".into());
+            }
+            assert!(!self.values.borrow().contains_key(account));
+            self.values
+                .borrow_mut()
+                .insert(account.into(), value.into());
+            Ok(())
+        }
+        fn read(&self, account: &str) -> Result<Option<String>, String> {
+            self.reads.set(self.reads.get() + 1);
+            Ok(self.values.borrow().get(account).cloned())
+        }
+    }
+    #[test]
+    fn bound_credentials_follow_identity_not_model_and_local_never_reads_keys() {
+        let d = tempfile::tempdir().unwrap();
+        let state = CompanionState::load(d.path().join("state.json")).unwrap();
+        let vault = FixtureVault::new();
+        let mut config = Config::default();
+        config.model = "fixture".into();
+        save_settings(&state, config.clone(), Some("fixture-a"), None, &vault).unwrap();
+        let original = state.stored.lock().unwrap().clone();
+        assert!(chat_key_for(&original, &vault).unwrap().is_some());
+        config.model = "other-model".into();
+        save_settings(&state, config.clone(), None, None, &vault).unwrap();
+        assert!(
+            chat_key_for(&state.stored.lock().unwrap(), &vault)
+                .unwrap()
+                .is_some()
+        );
+        config.base_url = "https://other.example/v1".into();
+        save_settings(&state, config.clone(), None, None, &vault).unwrap();
+        assert!(
+            chat_key_for(&state.stored.lock().unwrap(), &vault)
+                .unwrap()
+                .is_none()
+        );
+        assert_eq!(vault.reads.get(), 2);
+        let mut local = original.clone();
+        local.config.base_url = "http://[::1]:11434/v1".into();
+        assert!(chat_key_for(&local, &vault).unwrap().is_none());
+        assert_eq!(vault.reads.get(), 2);
+        let mut renamed = original.clone();
+        renamed.config.provider = "another-provider".into();
+        assert!(chat_key_for(&renamed, &vault).unwrap().is_none());
+        assert_eq!(vault.reads.get(), 2);
+        assert!(
+            vault
+                .values
+                .borrow()
+                .values()
+                .any(|v| v.contains("fixture-a"))
+        );
+        for url in [
+            "https://api.openai.com:8443/v1",
+            "https://api.openai.com/v2",
+            "https://api.openai.com/v1/other",
+        ] {
+            let mut changed = original.clone();
+            changed.config.base_url = url.into();
+            assert!(chat_key_for(&changed, &vault).unwrap().is_none());
+        }
+        let mut equivalent = original.clone();
+        equivalent.config.provider = " OPENAI-COMPATIBLE ".into();
+        equivalent.config.base_url = "https://API.OPENAI.COM:443/v1/".into();
+        assert!(chat_key_for(&equivalent, &vault).unwrap().is_some());
+    }
+    #[test]
+    fn edited_json_cannot_rebind_an_existing_secure_slot() {
+        let d = tempfile::tempdir().unwrap();
+        let state = CompanionState::load(d.path().join("state.json")).unwrap();
+        let vault = FixtureVault::new();
+        save_settings(&state, Config::default(), Some("fixture-a"), None, &vault).unwrap();
+        let mut forged = state.stored.lock().unwrap().clone();
+        forged.config.base_url = "https://other.example/v1".into();
+        forged.chat_credential.as_mut().unwrap().identity = serde_json::to_string(&(
+            forged.config.provider.trim().to_lowercase(),
+            forged.config.base_url.clone(),
+        ))
+        .unwrap();
+        assert!(chat_key_for(&forged, &vault).unwrap().is_none());
+    }
+    #[test]
+    fn failed_saves_preserve_committed_config_binding_and_existing_slots() {
+        let d = tempfile::tempdir().unwrap();
+        let path = d.path().join("state.json");
+        let state = CompanionState::load(path.clone()).unwrap();
+        let vault = FixtureVault::new();
+        let config = Config {
+            model_parameters: model_gateway::ChatParameterPolicy::Completion,
+            ..Default::default()
+        };
+        save_settings(
+            &state,
+            config,
+            Some("fixture-a"),
+            Some("fixture-remote"),
+            &vault,
+        )
+        .unwrap();
+        let before = std::fs::read(&path).unwrap();
+        let old = serde_json::to_value(&*state.stored.lock().unwrap()).unwrap();
+        let restored = CompanionState::load(path.clone()).unwrap();
+        assert_eq!(
+            serde_json::to_value(&*restored.stored.lock().unwrap()).unwrap(),
+            old
+        );
+        assert!(
+            chat_key_for(&restored.stored.lock().unwrap(), &vault)
+                .unwrap()
+                .is_some()
+        );
+        assert!(
+            !String::from_utf8(before.clone())
+                .unwrap()
+                .contains("fixture-a")
+        );
+        assert!(
+            !String::from_utf8(before.clone())
+                .unwrap()
+                .contains("fixture-remote")
+        );
+        let mut changed = Config::default();
+        changed.provider = "changed".into();
+        vault.fail.set(true);
+        assert!(save_settings(&state, changed.clone(), Some("fixture-b"), None, &vault).is_err());
+        assert_eq!(std::fs::read(&path).unwrap(), before);
+        assert_eq!(
+            serde_json::to_value(&*state.stored.lock().unwrap()).unwrap(),
+            old
+        );
+        vault.fail.set(false);
+        vault.fail_remote.set(true);
+        assert!(
+            save_settings(
+                &state,
+                changed.clone(),
+                Some("fixture-b"),
+                Some("fixture-new-remote"),
+                &vault
+            )
+            .is_err()
+        );
+        assert_eq!(std::fs::read(&path).unwrap(), before);
+        assert_eq!(
+            serde_json::to_value(&*state.stored.lock().unwrap()).unwrap(),
+            old
+        );
+        vault.fail_remote.set(false);
+        let mut broken = CompanionState::load(d.path().join("unused.json")).unwrap();
+        *broken.stored.lock().unwrap() = state.stored.lock().unwrap().clone();
+        broken.file = d.path().join("absent").join("state.json");
+        assert!(
+            save_settings(
+                &broken,
+                changed,
+                Some("fixture-b"),
+                Some("fixture-new-remote"),
+                &vault
+            )
+            .is_err()
+        );
+        assert_eq!(
+            serde_json::to_value(&*broken.stored.lock().unwrap()).unwrap(),
+            old
+        );
+        assert!(
+            chat_key_for(&broken.stored.lock().unwrap(), &vault)
+                .unwrap()
+                .is_some()
+        );
+        assert!(
+            vault
+                .values
+                .borrow()
+                .values()
+                .any(|v| v == "fixture-remote")
+        );
+    }
+    #[test]
+    fn unbound_legacy_credentials_are_not_read_or_adopted_and_local_key_save_is_rejected() {
+        let d = tempfile::tempdir().unwrap();
+        let state = CompanionState::load(d.path().join("state.json")).unwrap();
+        let vault = FixtureVault::new();
+        assert!(
+            chat_key_for(&state.stored.lock().unwrap(), &vault)
+                .unwrap()
+                .is_none()
+        );
+        assert_eq!(vault.reads.get(), 0);
+        let mut local = Config::default();
+        local.base_url = "http://localhost:11434/v1".into();
+        assert!(save_settings(&state, local.clone(), Some("fixture-cloud"), None, &vault).is_err());
+        assert!(vault.values.borrow().is_empty());
+        save_settings(&state, local, None, None, &vault).unwrap();
+        assert!(
+            chat_key_for(&state.stored.lock().unwrap(), &vault)
+                .unwrap()
+                .is_none()
+        );
+        assert_eq!(vault.reads.get(), 0);
+    }
     #[test]
     fn legacy_store_gets_appearance_defaults_without_losing_user_data() {
         let old = serde_json::json!({
@@ -208,6 +431,8 @@ mod tests {
         }
         assert_eq!(migrated["config"]["edgeVertical"], 0.73);
         assert_eq!(migrated["config"]["model"], "existing-model");
+        assert_eq!(migrated["config"]["modelParameters"], "standard");
+        assert!(stored.chat_credential.is_none());
         let d = tempfile::tempdir().unwrap();
         let path = d.path().join("state.json");
         let state = CompanionState::load(path.clone()).unwrap();

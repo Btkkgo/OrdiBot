@@ -34,7 +34,7 @@ async function render(
   snapshot: Snapshot,
   appearance: Appearance,
   onPreview: (p: Appearance) => void,
-  onSave: (c: Config) => Promise<void>,
+  onSave: (c: Config, key: string, remoteKey: string) => Promise<void>,
 ) {
   if (!document.getElementById("host")) {
     document.body.innerHTML = '<div id="host"></div>';
@@ -66,6 +66,35 @@ async function click(text: string) {
   await act(() => b.click());
 }
 describe("real settings lifecycle", () => {
+  it.each(["http://localhost:11434/v1", "https://127.0.0.2/v1", "https://localhost./v1", "http://[::ffff:127.0.0.1]/v1"])("clears an unsaved key and disables local Chat key for %s", async (url) => {
+    const snapshot=initialSnapshot();let submitted="not-saved";
+    await render(snapshot,{...snapshot.data.config,language:"en"},()=>{},async (_c,key)=>{submitted=key});
+    const input=(label:string)=>[...document.querySelectorAll("label")].find(e=>e.textContent?.startsWith(label))!.querySelector("input")!;
+    const set=async (el:HTMLInputElement,value:string)=>act(()=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value")!.set!.call(el,value);el.dispatchEvent(new Event("input",{bubbles:true}));});
+    await set(input("API Key"),"fixture-unsaved");
+    await set(input("Base URL"),url);
+    expect(input("API Key").value).toBe("");expect(input("API Key").disabled).toBe(true);
+    await click("Save settings");expect(submitted).toBe("");
+  });
+  it("exposes model parameter policies and explains key binding without changing appearance", async () => {
+    const snapshot = initialSnapshot();
+    let saved: Config | undefined;
+    await render(snapshot, {...snapshot.data.config,language:"en"},()=>{},async c=>{saved=c});
+    expect([...document.querySelectorAll("label")].some(e=>e.textContent?.startsWith("Model parameters"))).toBe(true);
+    const parameters=control("Model parameters");
+    await act(()=>{parameters.value="completion";parameters.dispatchEvent(new Event("change",{bubbles:true}));});
+    await click("Save settings");
+    expect((saved as unknown as Record<string,unknown>)?.modelParameters).toBe("completion");
+    expect(document.body.textContent).toContain("Keys are bound to the provider and full endpoint");
+    expect(saved?.fontScale).toBe(100);expect(saved?.edgeVertical).toBe(0.73);
+  });
+  it("shows secure-storage save failure without claiming success", async () => {
+    const snapshot=initialSnapshot();
+    await render(snapshot,{...snapshot.data.config,language:"en"},()=>{},async()=>{throw "SECURE_STORAGE_UNAVAILABLE"});
+    await click("Save settings");
+    expect(document.querySelector('[role="alert"]')?.textContent).toContain("secure storage");
+    expect([...document.querySelectorAll("button")].some(b=>b.textContent==="Saved")).toBe(false);
+  });
   it("keeps current preview and incoming docking when native snapshot changes", async () => {
     const snapshot = initialSnapshot();
     const preview: Appearance = {

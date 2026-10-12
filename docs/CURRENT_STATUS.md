@@ -51,3 +51,9 @@ Windows 11 interactive/context/API tests and live production provider acceptance
 ## Next
 
 Use the local companion and configure keys in Models only when ready for real API acceptance. See [baseline](PRODUCT_BASELINE.md), [migration](ordibot/MIGRATION.md), [provider evidence](ordibot/PROVIDERS.md) and [roadmap](open-source/ROADMAP.md). Issue #17 remains open for the unverified gates.
+
+## G7.1A secure Model Gateway foundation
+
+[Issue #24](https://github.com/Btkkgo/OrdiBot/issues/24): Provider/full-endpoint-bound credentials with a trusted secure-store identity envelope, immutable slot staging and atomic config commit, loopback without Chat credentials, redirect rejection and explicit request parameter profiles are implemented. **PASS:** 105 TypeScript / 47 active Rust tests, typecheck, retained source compatibility and independent review. Mac native build and independent Windows CI are pending. See the [G7.1A matrix](ordibot/G7_1A_ACCEPTANCE.md). Legacy shared Chat keys are preserved but require explicit re-entry; no existing credential or user data was opened or modified in this task. Production calls **0**; real Chat/Vision/Remote Agent **NOT RUN / OWNER DEFERRED**.
+
+This branch starts at main `061d217`. [G6.2 PR #23](https://github.com/Btkkgo/OrdiBot/pull/23) is still OPEN and was not automatically merged; its native evidence remains separate. Issues #17 and #22 stay OPEN. Windows GUI and new-binary GUI/Keychain acceptance are NOT RUN. Next: complete build/CI gates and submit an independent PR; wait for explicit G7.1B approval before live calls.

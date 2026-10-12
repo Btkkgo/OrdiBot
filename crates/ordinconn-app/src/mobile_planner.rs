@@ -35,6 +35,7 @@ pub fn build_planner_request(
     }
     let schema = decision_schema();
     Ok(UnifiedModelRequest {
+        parameter_policy: Default::default(),
         model: model.to_owned(),
         messages: vec![
             UnifiedMessage {

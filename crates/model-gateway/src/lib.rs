@@ -1,4 +1,6 @@
+mod endpoint;
 mod openai_compatible;
+pub use endpoint::ModelEndpoint;
 
 pub use openai_compatible::{
     ChatCompletionDiagnostics, ChatStreamNormalizer, OpenAiCompatibleChatAdapter,
@@ -67,6 +69,15 @@ pub struct StructuredOutputRequest {
     pub schema: Value,
 }
 
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ChatParameterPolicy {
+    #[default]
+    Standard,
+    Completion,
+    NoTemperature,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UnifiedModelRequest {
@@ -75,6 +86,8 @@ pub struct UnifiedModelRequest {
     pub tools: Vec<ModelTool>,
     pub context: std::collections::BTreeMap<String, String>,
     pub temperature: f32,
+    #[serde(default)]
+    pub parameter_policy: ChatParameterPolicy,
     #[serde(default)]
     pub structured_output: Option<StructuredOutputRequest>,
     #[serde(default)]
@@ -96,6 +109,7 @@ impl UnifiedModelRequest {
             tools: Vec::new(),
             context: Default::default(),
             temperature: 0.2,
+            parameter_policy: ChatParameterPolicy::default(),
             structured_output: None,
             max_output_tokens: None,
             timeout_ms: None,

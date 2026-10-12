@@ -21,6 +21,7 @@ export interface Config extends Appearance {
   model: string;
   vision: boolean;
   outputLength: number;
+  modelParameters: "standard" | "completion" | "no-temperature";
   style: "concise" | "normal" | "detailed";
   alwaysOnTop: boolean;
   remoteModel: string;
@@ -74,6 +75,7 @@ export const defaultConfig: Config = {
   model: "",
   vision: false,
   outputLength: 1024,
+  modelParameters: "standard",
   style: "concise",
   alwaysOnTop: true,
   remoteModel: "gpt-6-astra",

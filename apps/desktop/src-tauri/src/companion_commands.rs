@@ -1,3 +1,4 @@
+use super::companion_credentials::{SystemVault, chat_key_for, remote_key_for, save_settings};
 use super::companion_store::*;
 use model_gateway::{
     ModelEvent, ModelProviderAdapter, ModelRole, OpenAiCompatibleChatAdapter, ProviderCapabilities,
@@ -17,14 +18,17 @@ pub struct Snapshot {
 }
 #[tauri::command]
 pub fn companion_snapshot(state: State<'_, CompanionState>) -> Result<Snapshot, String> {
+    let data = state
+        .stored
+        .lock()
+        .map_err(|_| "STATE_UNAVAILABLE")?
+        .clone();
+    let key_present = chat_key_for(&data, &SystemVault)?.is_some();
+    let remote_key_present = remote_key_for(&data)?.is_some();
     Ok(Snapshot {
-        data: state
-            .stored
-            .lock()
-            .map_err(|_| "STATE_UNAVAILABLE")?
-            .clone(),
-        key_present: read_key(false)?.is_some(),
-        remote_key_present: read_key(true)?.is_some(),
+        data,
+        key_present,
+        remote_key_present,
         shortcut_available: *state
             .shortcut_available
             .lock()
@@ -40,28 +44,36 @@ pub fn save_companion_config(
     remote_api_key: Option<String>,
 ) -> Result<(), String> {
     config.validate()?;
-    for (remote, key) in [(false, api_key), (true, remote_api_key)] {
-        if let Some(key) = key.filter(|k| !k.trim().is_empty()) {
-            key_entry(remote)?
-                .set_password(key.trim())
-                .map_err(|_| "SECURE_STORAGE_UNAVAILABLE")?
-        }
-    }
-    let mut stored = state.stored.lock().map_err(|_| "STATE_UNAVAILABLE")?;
-    let old = stored.config.clone();
-    stored.config = config;
-    if let Err(e) = state.persist(&stored) {
-        stored.config = old;
-        return Err(e);
-    }
+    let old = state
+        .stored
+        .lock()
+        .map_err(|_| "STATE_UNAVAILABLE")?
+        .config
+        .clone();
     if let Some(w) = app.get_webview_window("main") {
-        w.set_always_on_top(stored.config.always_on_top)
+        w.set_always_on_top(config.always_on_top)
             .map_err(|_| "WINDOW_UNAVAILABLE")?
     }
-    let config = stored.config.clone();
-    drop(stored);
+    if let Err(error) =
+        super::companion_menu::preview_ui_language(app.clone(), config.language.clone()).and_then(
+            |_| {
+                save_settings(
+                    &state,
+                    config.clone(),
+                    api_key.as_deref(),
+                    remote_api_key.as_deref(),
+                    &SystemVault,
+                )
+            },
+        )
+    {
+        if let Some(w) = app.get_webview_window("main") {
+            let _ = w.set_always_on_top(old.always_on_top);
+        }
+        let _ = super::companion_menu::preview_ui_language(app.clone(), old.language);
+        return Err(error);
+    }
     let _ = app.emit("ordibot:config", &config);
-    super::companion_menu::preview_ui_language(app.clone(), config.language)?;
     super::companion_presence::refresh_preferences(&app);
     Ok(())
 }
@@ -134,6 +146,7 @@ pub fn build_request(config: &Config, messages: &[Message]) -> Result<UnifiedMod
         );
     }
     request.max_output_tokens = Some(config.output_length);
+    request.parameter_policy = config.model_parameters;
     request.timeout_ms = Some(90_000);
     request.max_response_bytes = Some(2_000_000);
     Ok(request)
@@ -149,17 +162,18 @@ pub async fn chat_send(
     if text.trim().is_empty() || text.len() > 50_000 || attachments.len() > 4 {
         return Err("INVALID_MESSAGE".into());
     }
-    let config = state
+    let stored = state
         .stored
         .lock()
         .map_err(|_| "STATE_UNAVAILABLE")?
-        .config
         .clone();
+    let config = stored.config.clone();
     config.validate()?;
-    let key = read_key(false)?; // Local unauthenticated endpoints are supported; production has no mock fallback.
+    let key = chat_key_for(&stored, &SystemVault)?;
     if key.is_none()
-        && !config.base_url.starts_with("http://127.0.0.1")
-        && !config.base_url.starts_with("http://localhost")
+        && !model_gateway::ModelEndpoint::parse(&config.base_url)
+            .map_err(|_| "INVALID_BASE_URL")?
+            .local
     {
         return Err("MODEL_KEY_NOT_CONFIGURED".into());
     }
