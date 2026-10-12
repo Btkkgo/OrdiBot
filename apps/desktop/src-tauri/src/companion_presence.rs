@@ -28,7 +28,7 @@ pub struct ReminderTracker {
 }
 impl ReminderTracker {
     fn observe(&mut self, context: DesktopContext, seconds: u64) -> Option<DesktopContext> {
-        if !context.available || context.app.eq_ignore_ascii_case("OrdiBot") {
+        if !context.available || self_app(&context.app) {
             return None;
         }
         let key = format!("{}\n{}", context.app, context.window);
@@ -83,25 +83,28 @@ fn edge_coordinates(
     let y = top + (((height as i32 - h).max(0) as f64) * vertical.clamp(0.0, 1.0)).round() as i32;
     (x, y)
 }
+fn self_app(app: &str) -> bool {
+    matches!(
+        app.to_ascii_lowercase().as_str(),
+        "ordibot" | "ordibot-desktop"
+    )
+}
 fn browser_or_editor(app: &str) -> bool {
     let app = app.to_lowercase();
     [
         "chrome",
         "safari",
         "firefox",
-        "edge",
+        "microsoft edge",
         "brave",
-        "arc",
         "visual studio",
-        "cursor",
-        "zed",
         "intellij",
         "webstorm",
         "sublime",
     ]
     .iter()
     .any(|name| app.contains(name))
-        || app == "code"
+        || matches!(app.as_str(), "code" | "arc" | "cursor" | "zed")
 }
 
 #[cfg(test)]
@@ -149,8 +152,10 @@ mod tests {
         assert!(browser_or_editor("Google Chrome"));
         assert!(browser_or_editor("Code"));
         assert!(!browser_or_editor("Preview"));
+        assert!(!browser_or_editor("Archive Utility"));
         let mut t = ReminderTracker::default();
         assert!(t.observe(context("OrdiBot", "OrdiBot"), 0).is_none());
+        assert!(t.observe(context("ordibot-desktop", ""), 3).is_none());
     }
 }
 
@@ -501,7 +506,7 @@ pub fn start_awareness(app: tauri::AppHandle) {
                 continue;
             };
             if !context.available
-                || context.app.eq_ignore_ascii_case("OrdiBot")
+                || self_app(&context.app)
                 || (c.browsers_editors_only && !browser_or_editor(&context.app))
             {
                 continue;

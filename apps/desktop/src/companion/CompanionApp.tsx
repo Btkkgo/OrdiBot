@@ -800,7 +800,9 @@ export function CompanionApp() {
                         ? "正在获取内容…"
                         : busy
                           ? "模型正在生成…"
-                          : "只读取你主动附加的内容"}
+                          : snapshot.data.config.contextReminders
+                            ? "仅检测应用/标题；内容需主动附加"
+                            : "只读取你主动附加的内容"}
                     </span>
                     {retryText && !busy ? (
                       <button title="重试" onClick={() => void send(retryText)}>
