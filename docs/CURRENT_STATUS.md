@@ -21,7 +21,8 @@ Four surfaces (Hidden, Edge, Chat, Agent), left/right docking and remembered ver
 
 - **PASS:** the edge entry now shows a cropped head, while expanded Chat retains the full original character at the remembered vertical ratio. Native left/right expansion, collapse back to a head, and reminder-click metadata attachment with editable input were exercised on the revised release.
 - A persistent card above the composer identifies the accepted app/title separately from passive latest metadata and offers explicit text/screenshot attachment. It disappears after rich content is attached. Independent review caught its initial placement above long history; moving it outside the history scroller resolved the finding.
-- **PASS:** 89 TypeScript tests, typecheck, frontend and signed native builds. Native adapters and the previously verified 34 Rust tests are unchanged. Fresh Windows CI and the current binary screen-recording grant still require revalidation. Production requests remain 0.
+- **PASS:** 89 TypeScript tests, typecheck, frontend and signed native builds. The verified runtime receipt identifies `60f23d1`; restarting that exact release preserved the right edge and vertical position. Native adapters are unchanged. Both fresh Windows runs ([branch](https://github.com/Btkkgo/OrdiBot/actions/runs/38210164089), [PR](https://github.com/Btkkgo/OrdiBot/actions/runs/38210230779)) passed tests, typecheck and native NSIS packaging; the new installer was downloaded. The previously observed Rust total is 34; raw logs for the new run could not be retrieved because of a transport timeout. Production requests remain 0.
+- **BLOCKED_OS_AUTHENTICATION / NOT RUN:** screenshot revalidation on the new binary awaits owner authentication in macOS System Settings to refresh its existing recording grant. The old grant has not yet been removed; unrelated permissions remain unchanged. Previous-release screenshot evidence remains separate.
 
 ## Partial
 
@@ -37,7 +38,7 @@ Only documented hosted-computer task APIs qualify as native Agent integration. M
 
 ## Planned
 
-Address remaining native restoration and Windows 11 interactive gates with real platform evidence. The original main migration is complete. The supplemental UI revision is locally verified; its release receipt and fresh Windows CI are being finalized.
+Address remaining native restoration and Windows 11 interactive gates with real platform evidence. The original main migration is complete. The supplemental UI revision has a verified release receipt and fresh Windows CI; current-binary screenshot acceptance still awaits OS authentication. Documentation-only closeout reuses the verified runtime without rebuilding it.
 
 ## Not Started
 
