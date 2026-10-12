@@ -9,3 +9,5 @@ Launch `target/release/bundle/macos/OrdiBot.app` for the release build. Quit an 
 No Apple Developer certificate, Team ID, hardened-runtime distribution, notarization, stapling or App Store preparation is required. Historical OrdinConn bundles/frozen receipts, source, private data and Keychain are preserved. The new wrapper does not perform legacy cleanup. The new identifier is `ai.ordibot.desktop`; configure model keys locally instead of silently importing old credentials.
 
 On Windows, platform config selects NSIS and the original OrdiBot `.ico`. The independent Windows CI runs tests and the native debug installer build. Compilation does not verify Windows GUI/context/API behavior.
+
+Local ad-hoc signing can change the executable code requirement after a rebuild. A screen-recording toggle may remain enabled while macOS rejects the replacement executable against an older grant. In that observed case, quit OrdiBot, remove only its stale Screen & System Audio Recording entry, add the current verified `OrdiBot.app`, enable it and reopen. Verify an actual screenshot preview; the toggle alone is insufficient evidence. Do not reset unrelated application permissions.

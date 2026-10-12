@@ -12,14 +12,14 @@ Four surfaces (Hidden, Edge, Chat, Agent), left/right docking and remembered ver
 
 - **PASS:** all-ref recovery bundle, original untracked archive, SQLite backup/integrity and logical equality; original untracked file hashes preserved.
 - **PASS:** 89 TypeScript tests, 34 Rust tests (active default members), TypeScript typecheck, frontend/native build, public security and whitespace gates. Independent code review found two retry/filter defects; both regressions failed before the fix and passed afterward; follow-up review approved the fixes.
-- **PASS:** actual macOS release launch; Edge startup/click expansion; Chat/Agent switch and restored Chat dimensions; Chat and Edge dragging; left/right docking, vertical position and preference persistence across restart; explicit clipboard attachment/removal; actual foreground app metadata; screenshot preview, confirmed attachment and removal after OS permission was enabled. Missing model configuration produces an honest error without a fake reply.
-- **PASS:** same GitHub repository renamed to [Btkkgo/OrdiBot](https://github.com/Btkkgo/OrdiBot): identity `R_kgDOUib6fw`, 139 stars and all remote Git refs unchanged at rename. Main's five divergent commits are preserved through a controlled local merge. The separate physical robot project is untouched.
-- **PASS:** independent Windows CI at `598d159` ran 89 TypeScript / 33 Rust tests and uploaded a native NSIS installer. After rename, a rerun failed on cached Tauri permission paths from the old checkout; cache isolation was fixed and a fresh-path run is pending. Compilation is distinct from GUI acceptance.
+- **PASS:** actual macOS release launch; Edge startup/click expansion; Chat/Agent switch and restored Chat dimensions; Chat and Edge dragging; left/right docking, vertical position and preference persistence across restart; explicit clipboard attachment/removal; actual foreground app metadata; actual reminder-click metadata attachment; screenshot preview, cancellation without attachment, confirmed attachment and removal on the latest `68a4f86` release after its screen-recording grant was refreshed. Missing model configuration produces an honest error without a fake reply.
+- **PASS:** same GitHub repository renamed to [Btkkgo/OrdiBot](https://github.com/Btkkgo/OrdiBot): identity `R_kgDOUib6fw`, 139 stars and all remote Git refs unchanged at rename. Main's five divergent commits are preserved through a controlled local merge; [PR #18](https://github.com/Btkkgo/OrdiBot/pull/18) is merged and public main includes `68a4f86`. The separate physical robot project is untouched.
+- **PASS:** independent Windows CI at `68a4f86` ran 89 TypeScript / 34 Rust tests and uploaded a native NSIS installer. Fresh renamed-checkout runs passed after cache isolation was fixed, including [main run 38207262944](https://github.com/Btkkgo/OrdiBot/actions/runs/38207262944). Compilation is distinct from GUI acceptance.
 - Production Chat/remote requests during implementation: **0**.
 
 ## Partial
 
-macOS passive awareness obtained real app names; window titles were unavailable in observed runs and degrade to app-only metadata. Reminder throttle/filter/dedup and metadata attachment boundaries have regression/source coverage; actual reminder-click attachment, tray menu and global shortcut restoration are **NOT VERIFIED**. CUA synthetic shortcut attempts did not reopen Chat; no specific native cause was established, and Edge-click restore works. Windows GUI/context acceptance is **NOT RUN**. English UI localization is deferred.
+macOS passive awareness obtained real app names; window titles were unavailable in observed runs and degrade to app-only metadata. Reminder throttle/filter/dedup and metadata attachment boundaries have regression/source coverage; tray menu and global shortcut restoration are **NOT VERIFIED**. CUA synthetic shortcut attempts did not reopen Chat; no specific native cause was established, and Edge-click restore works. Windows GUI/context acceptance is **NOT RUN**. English UI localization is deferred.
 
 ## Blocked
 
@@ -31,7 +31,7 @@ Only documented hosted-computer task APIs qualify as native Agent integration. M
 
 ## Planned
 
-Finish public main integration and final bundle receipt, then address remaining native restoration and Windows 11 interactive gates with real platform evidence.
+Address remaining native restoration and Windows 11 interactive gates with real platform evidence. Main integration and the verified release receipt are complete; the receipt identifies the unchanged runtime build at `68a4f86`.
 
 ## Not Started
 

@@ -12,14 +12,14 @@ Hidden、Edge、Chat、Agent 四态，左右停靠与垂直位置记忆，可关
 
 - **PASS：**全部 refs 恢复备份、原有未跟踪文件归档、SQLite 备份/完整性及逻辑一致；原有未跟踪文件哈希保留。
 - **PASS：**89 个 TypeScript、34 个 Rust 测试（活跃默认成员），类型检查，前端/原生构建，公开安全与空白检查。独立代码审查发现重试/过滤两处缺陷；两项回归均先失败、修复后通过，复核认可修复。
-- **PASS：**真实 macOS release 启动；Edge 默认启动与点击展开；Chat/Agent 切换及 Chat 尺寸恢复；Chat/Edge 拖动；左右停靠、垂直位置及偏好重启持久化；主动剪贴板附件与移除；真实前台应用元数据；系统权限开启后截图预览、确认附件与移除。缺少模型配置时显示真实错误，不生成假回复。
-- **PASS：**同一 GitHub 仓库已更名为 [Btkkgo/OrdiBot](https://github.com/Btkkgo/OrdiBot)：身份 `R_kgDOUib6fw`、139 Stars 和更名时全部远程 Git refs 保持一致。main 的五个分叉提交通过受控本地合并保留。独立实体机器人项目未改动。
-- **PASS：**独立 Windows CI 在 `598d159` 通过 89 个 TypeScript / 33 个 Rust 测试并上传原生 NSIS 安装包。更名后的重跑因旧工作区 Tauri 权限路径缓存失败；已修复缓存隔离，等待新路径执行。编译与界面验收分别记录。
+- **PASS：**真实 macOS release 启动；Edge 默认启动与点击展开；Chat/Agent 切换及 Chat 尺寸恢复；Chat/Edge 拖动；左右停靠、垂直位置及偏好重启持久化；主动剪贴板附件与移除；真实前台应用元数据；真实提醒点击附加元数据；最新 `68a4f86` release 的录屏授权刷新后，截图预览、取消不附加、确认附件与移除通过。缺少模型配置时显示真实错误，不生成假回复。
+- **PASS：**同一 GitHub 仓库已更名为 [Btkkgo/OrdiBot](https://github.com/Btkkgo/OrdiBot)：身份 `R_kgDOUib6fw`、139 Stars 和更名时全部远程 Git refs 保持一致。main 的五个分叉提交通过受控本地合并保留；[PR #18](https://github.com/Btkkgo/OrdiBot/pull/18) 已合并，公开 main 包含 `68a4f86`。独立实体机器人项目未改动。
+- **PASS：**独立 Windows CI 在 `68a4f86` 通过 89 个 TypeScript / 34 个 Rust 测试并上传原生 NSIS 安装包。缓存隔离修复后，更名工作区的独立执行通过，包括 [main 执行 38207262944](https://github.com/Btkkgo/OrdiBot/actions/runs/38207262944)。编译与界面验收分别记录。
 - 实施期间生产 Chat/远程请求：**0**。
 
 ## Partial / 部分验证
 
-macOS 被动感知取得真实应用名；实测窗口标题未取得，降级为仅应用元数据。提醒节流/过滤/去重及元数据附件边界有回归/源码覆盖；真实提醒点击附加、菜单栏入口及全局快捷键恢复为 **NOT VERIFIED**。CUA 合成快捷键尝试未展开 Chat，尚无确定原生原因；点击 Edge 恢复可用。Windows 界面/上下文验收为 **NOT RUN**。英文界面本地化待办。
+macOS 被动感知取得真实应用名；实测窗口标题未取得，降级为仅应用元数据。提醒节流/过滤/去重及元数据附件边界有回归/源码覆盖；菜单栏入口及全局快捷键恢复为 **NOT VERIFIED**。CUA 合成快捷键尝试未展开 Chat，尚无确定原生原因；点击 Edge 恢复可用。Windows 界面/上下文验收为 **NOT RUN**。英文界面本地化待办。
 
 ## Blocked / 暂缓
 
@@ -31,7 +31,7 @@ macOS 被动感知取得真实应用名；实测窗口标题未取得，降级�
 
 ## Planned / 后续
 
-完成公开主线集成与最终应用构建记录，然后用真实平台证据处理原生恢复及 Windows 11 交互验收。
+用真实平台证据处理原生恢复及 Windows 11 交互验收。公开主线集成与已验证 release 构建记录已完成；构建记录标识未变化的 `68a4f86` 运行时代码。
 
 ## Not Started / 未开始
 
