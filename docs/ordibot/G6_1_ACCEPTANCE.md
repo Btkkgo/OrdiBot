@@ -28,8 +28,8 @@ No original OrdiBot store, OrdinConn backup, legacy credentials or independent r
 
 ## Inspected native screenshots
 
-![English settings at 130%, Blue and Midnight](assets/g6-1-settings-en-130.png)
+![English settings at 130%, Blue and Midnight](assets/g6-1-settings-en-130.jpg)
 
-![Chinese Chat at 130%](assets/g6-1-chat-zh-130.png)
+![Chinese Chat at 130%](assets/g6-1-chat-zh-130.jpg)
 
-![English Agent workspace at 130%](assets/g6-1-agent-en-130.png)
+![English Agent workspace at 130%](assets/g6-1-agent-en-130.jpg)

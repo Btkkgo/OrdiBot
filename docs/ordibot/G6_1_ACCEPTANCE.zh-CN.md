@@ -28,8 +28,8 @@
 
 ## 已检查的原生界面截图
 
-![英文设置，130%、Blue 与 Midnight](assets/g6-1-settings-en-130.png)
+![英文设置，130%、Blue 与 Midnight](assets/g6-1-settings-en-130.jpg)
 
-![中文 Chat，130%](assets/g6-1-chat-zh-130.png)
+![中文 Chat，130%](assets/g6-1-chat-zh-130.jpg)
 
-![英文 Agent 工作台，130%](assets/g6-1-agent-en-130.png)
+![英文 Agent 工作台，130%](assets/g6-1-agent-en-130.jpg)
